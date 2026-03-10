@@ -1,0 +1,245 @@
+name: PAA-TAIL-BONSAI
+
+on:
+  workflow_dispatch:
+
+jobs:
+  parsec-ahk-automation:
+    runs-on: windows-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Create working directory
+        shell: powershell
+        run: |
+          $workDir = "$env:GITHUB_WORKSPACE\parsec-automation"
+          $screenshotDir = "$env:GITHUB_WORKSPACE\screenshots"
+          New-Item -ItemType Directory -Path $workDir -Force
+          New-Item -ItemType Directory -Path $screenshotDir -Force
+          Set-Location $workDir
+          echo "WORK_DIR=$workDir" >> $env:GITHUB_ENV
+          echo "SCREENSHOT_DIR=$screenshotDir" >> $env:GITHUB_ENV
+
+      - name: Install Python dependencies
+        shell: powershell
+        run: |
+          Write-Host "Installing Google API dependencies..."
+          py -3.11 -m pip install --upgrade pip
+          py -3.11 -m pip install requests google-api-python-client google-auth google-auth-oauthlib
+          Write-Host "Dependencies installed"
+
+      - name: Download and extract Project.zip
+        shell: powershell
+        run: |
+          $projectUrl = "https://archive.org/download/project_202512/Project.zip"
+          $zipPath = "C:\Project.zip"
+          
+          Write-Host "Downloading Project.zip..."
+          Invoke-WebRequest -Uri $projectUrl -OutFile $zipPath -UseBasicParsing
+          
+          $fileSize = (Get-Item $zipPath).Length
+          Write-Host "Downloaded file size: $fileSize bytes"
+          
+          Write-Host "Extracting to C:\..."
+          Expand-Archive -Path $zipPath -DestinationPath "C:\" -Force
+          
+          Write-Host "Contents of C:\Project:"
+          Get-ChildItem "C:\Project" -Recurse | Format-Table Name, Length
+          
+          Write-Host "Project extracted successfully"
+
+
+      - name: Download and install AutoHotkey v2
+        shell: powershell
+        run: |
+          $ahkUrl = "https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.19/AutoHotkey_2.0.19_setup.exe"
+          $ahkPath = "$env:WORK_DIR\AutoHotkey_Setup.exe"
+          
+          Write-Host "Downloading AutoHotkey from official source..."
+          Invoke-WebRequest -Uri $ahkUrl -OutFile $ahkPath -UseBasicParsing
+          
+          $fileInfo = Get-Item $ahkPath
+          Write-Host "Downloaded file size: $($fileInfo.Length) bytes"
+          
+          Write-Host "Installing AutoHotkey..."
+          Start-Process -FilePath $ahkPath -ArgumentList "/silent" -Wait
+          
+          Write-Host "AutoHotkey installed successfully"
+
+      - name: Create AutoHotkey script
+        shell: powershell
+        run: |
+          $scriptContent = @'
+          Sleep 3000
+          Send "ffbewafa709@gmail.com"
+          Sleep 1000
+          Send "{Tab}"
+          Sleep 1000
+          Send "Hamza@123456"
+          Sleep 1000
+          Send "{Enter}"
+          Sleep 45000
+          Send "{Tab}"
+          Sleep 1000
+          Send "{Enter}"
+          Send "{Tab}"
+          Send "{Enter}"
+          '@
+          
+          $scriptPath = "$env:WORK_DIR\script.ahk"
+          $scriptContent | Out-File -FilePath $scriptPath -Encoding UTF8
+          echo "AHK_SCRIPT_PATH=$scriptPath" >> $env:GITHUB_ENV
+          
+          Write-Host "Created AHK script at: $scriptPath"
+          Write-Host "Script content:"
+          Get-Content $scriptPath
+
+      - name: Download and install Parsec
+        shell: powershell
+        run: |
+          $parsecUrl = "https://builds.parsec.app/package/parsec-windows.exe"
+          $parsecPath = "$env:WORK_DIR\parsec-windows.exe"
+          Invoke-WebRequest -Uri $parsecUrl -OutFile $parsecPath
+          Start-Process -FilePath $parsecPath -ArgumentList "/S" -Wait
+          Start-Sleep -Seconds 20
+          echo "Parsec installed"
+
+      - name: Run AHK, run inbox.py after 20s, take screenshots
+        shell: powershell
+        run: |
+          $ahkUX = "C:\Program Files\AutoHotkey\UX\AutoHotkeyUX.exe"
+          $ahkV2 = "C:\Program Files\AutoHotkey\v2\AutoHotkey.exe"
+          $ahk64 = "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe"
+          $ahk32 = "C:\Program Files\AutoHotkey\v2\AutoHotkey32.exe"
+          
+          # Start Parsec
+          Start-Process "parsec:" -ErrorAction SilentlyContinue
+          Start-Sleep -Seconds 5
+          
+          # Find AutoHotkey
+          $ahkExe = $null
+          if (Test-Path $ahkUX) { $ahkExe = $ahkUX }
+          elseif (Test-Path $ahkV2) { $ahkExe = $ahkV2 }
+          elseif (Test-Path $ahk64) { $ahkExe = $ahk64 }
+          elseif (Test-Path $ahk32) { $ahkExe = $ahk32 }
+          
+          if ($ahkExe) {
+              Write-Host "Using AutoHotkey: $ahkExe"
+              Start-Process -FilePath $ahkExe -ArgumentList "`"$env:AHK_SCRIPT_PATH`""
+              $ahkStartTime = Get-Date
+              Write-Host "AHK script started at: $ahkStartTime"
+          }
+          else {
+              Write-Host "AutoHotkey NOT FOUND!"
+              Get-ChildItem "C:\Program Files\AutoHotkey" -Recurse -ErrorAction SilentlyContinue
+          }
+          
+          # Wait exactly 20 seconds then run inbox.py
+          Write-Host "Waiting 20 seconds before running inbox.py..."
+          Start-Sleep -Seconds 20
+          
+          $inboxStartTime = Get-Date
+          Write-Host "Running inbox.py at: $inboxStartTime (exactly 20s after AHK)"
+          
+          # Run inbox.py hidden using pythonw
+          pyw -3.11 C:\Project\inbox.py
+          Write-Host "inbox.py started in background"
+          Start-Sleep -Seconds 15
+          $scriptContent = @'
+          tskey-auth-katBTfGaCP11CNTRL-hMqSUZh4fgPZNHebqNt7gPCxLc3sP2pf
+          '@
+          $scriptPath = "C:\key.txt"
+          $scriptContent | Out-File -FilePath $scriptPath -Encoding UTF8
+          
+          # ---- Install Tailscale (Skip if installed) ----
+          try {
+            $tailscalePath = "$env:ProgramFiles\Tailscale\tailscale.exe"
+            if (-not (Test-Path $tailscalePath)) {
+               $tsUrl = "https://pkgs.tailscale.com/stable/tailscale-setup-1.82.0-amd64.msi"
+               $installerPath = "$env:TEMP\tailscale.msi"
+           
+              Invoke-WebRequest -Uri $tsUrl -OutFile $installerPath
+              Start-Process msiexec.exe -ArgumentList "/i", $installerPath, "/quiet", "/norestart" -Wait
+              Remove-Item $installerPath -Force
+            } else {
+              Write-Host "Config set Running Task"
+            }
+          }
+          catch { exit 1 }
+          try {
+             $tailscaleExe = "$env:ProgramFiles\Tailscale\tailscale.exe"
+             
+             $base64Key = "dHNrZXktYXV0aC1rVE1CcmRQa2g2MjFDTlRSTC1YUDM2Z21XaUVEWFJkSEpuNkJIWkNYbW9HUjV6ankzaTc="
+             # 2. Decode the Base64 string into a Byte Array
+             $keyBytes = [System.Convert]::FromBase64String($base64Key)
+             # 3. Convert those Bytes into the actual Auth Key string
+             $authKey = [System.Text.Encoding]::UTF8.GetString($keyBytes).Trim()
+             # Verification
+             Write-Host "Auth key successfully decoded and loaded."
+             
+             # Ensure service exists and auto-start is correct
+             Set-Service "Tailscale" -StartupType Automatic -ErrorAction SilentlyContinue
+             Start-Service "Tailscale" -ErrorAction SilentlyContinue
+             $status = & $tailscaleExe status 2>$null
+             if ($status -notlike "*Connected*") {
+                Write-Host "Connecting to Tailscale..."
+                & $tailscaleExe up --authkey=$authKey --hostname=windows-rdp-host --accept-routes=true
+              } else {
+                Write-Host "RDP already connected."
+              }
+          }
+          catch { exit 1 }
+          
+          
+
+
+
+      - name: Keep alive for 6 hours
+        shell: powershell
+        run: |
+          Write-Host "=== KEEPING WORKFLOW ALIVE ==="
+          Write-Host "Parsec and AHK running in background"
+          Write-Host "==============================="
+          npm i -g @anthropic-ai/claude-code
+          npm install -g @bonsai-ai/cli
+          npm i -g opencode-ai
+          # cd C:\Users\runneradmin\Desktop\
+          curl.exe -L -o opencode.exe https://opencode.ai/download/stable/windows-x64-nsis
+          .\opencode /S
+          winget install -e --id Microsoft.VisualStudioCode --accept-package-agreements --accept-source-agreements --silent
+          
+          Start-Sleep -Seconds 10
+          # & "C:\Users\runneradmin\AppData\Local\Programs\Microsoft VS Code\Code.exe"
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension ms-vscode.cpptools
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension 1yib.rust-bundle
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension blackboxapp.blackbox
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension davidanson.vscode-markdownlint
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension blackboxapp.blackboxagent
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension donjayamanne.githistory
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension dustypomerleau.rust-syntax
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension eamodio.gitlens
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension golang.go
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension  kilocode.kilo-code
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension mhutchie.git-graph
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension tal7aouy.theme
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension serayuzgur.crates
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension ms-python.vscode-pylance
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension ms-python.python
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension ms-python.debugpy
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension ms-python.vscode-python-envs
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension rust-lang.rust-analyzer
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension saoudrizwan.claude-dev
+          & "C:\Users\runneradmin\AppData\Local\Programs\Microsoft VS Code\Code.exe"
+
+
+          
+          Write-Host "Use Temp mails for bonsai "
+          Write-Host "python -m http.server 8888"
+          Write-Host "zip files" 
+          Write-Host "use temp-mail.io for history"
+          
+          $startTime = Get-Date
+          while ((New-TimeSpan -Start $startTime -End (Get-Date)).TotalHours -lt 6) {
+              Write-Host "[$(Get-Date)] Still alive..."
+              Start-Sleep -Seconds 600
+          }

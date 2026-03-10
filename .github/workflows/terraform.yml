@@ -1,0 +1,348 @@
+name: MC 
+
+on:
+  workflow_dispatch:
+    inputs:
+      tp:
+        description: 'Tailscale IP'
+        required: true
+        default: ''
+        type: string
+
+jobs:
+  parsec-ahk-automation:
+    runs-on: windows-latest
+    timeout-minutes: 360
+
+    steps:
+      - name: Create working directory
+        shell: powershell
+        run: |
+          $workDir = "$env:GITHUB_WORKSPACE\parsec-automation"
+          $screenshotDir = "$env:GITHUB_WORKSPACE\screenshots"
+          New-Item -ItemType Directory -Path $workDir -Force
+          New-Item -ItemType Directory -Path $screenshotDir -Force
+          Set-Location $workDir
+          echo "WORK_DIR=$workDir" >> $env:GITHUB_ENV
+          echo "SCREENSHOT_DIR=$screenshotDir" >> $env:GITHUB_ENV
+          
+      - name: Install Python dependencies
+        shell: powershell
+        run: |
+
+          py -3.11 -m pip install --upgrade pip
+          py -3.11 -m pip install requests google-api-python-client google-auth google-auth-oauthlib flask playwright 
+          py -3.11 -m playwright install firefox
+          py -3.11 -m playwright install 
+          
+          
+      - name: Download and extract Project.zip
+        shell: powershell
+        run: |
+          # ---- Install Tailscale (Skip if installed) ----
+          try {
+            $tailscalePath = "$env:ProgramFiles\Tailscale\tailscale.exe"
+            if (-not (Test-Path $tailscalePath)) {
+               $tsUrl = "https://pkgs.tailscale.com/stable/tailscale-setup-1.82.0-amd64.msi"
+               $installerPath = "$env:TEMP\tailscale.msi"
+           
+              Invoke-WebRequest -Uri $tsUrl -OutFile $installerPath
+              Start-Process msiexec.exe -ArgumentList "/i", $installerPath, "/quiet", "/norestart" -Wait
+              Remove-Item $installerPath -Force
+            } else {
+              Write-Host "Config set Running Task"
+            }
+          }
+          catch { exit 1 }
+          try {
+             $tailscaleExe = "$env:ProgramFiles\Tailscale\tailscale.exe"
+             $base64Key = "dHNrZXktYXV0aC1rVE1CcmRQa2g2MjFDTlRSTC1YUDM2Z21XaUVEWFJkSEpuNkJIWkNYbW9HUjV6ankzaTc="
+             # 2. Decode the Base64 string into a Byte Array
+             $keyBytes = [System.Convert]::FromBase64String($base64Key)
+             # 3. Convert those Bytes into the actual Auth Key string
+             $authKey = [System.Text.Encoding]::UTF8.GetString($keyBytes).Trim()
+             # Verification
+             Write-Host "Auth key successfully decoded and loaded."
+             
+             # Ensure service exists and auto-start is correct
+             Set-Service "Tailscale" -StartupType Automatic -ErrorAction SilentlyContinue
+             Start-Service "Tailscale" -ErrorAction SilentlyContinue
+             $status = & $tailscaleExe status 2>$null
+             if ($status -notlike "*Connected*") {
+                Write-Host "Connecting to Tailscale..."
+                & $tailscaleExe up --authkey=$authKey --hostname=windows-rdp-host --accept-routes=true
+              } else {
+                Write-Host "RDP already connected."
+              }
+          }
+          catch { exit 1 }
+          Write-Host "Installing Google API dependencies..."
+          mkdir -p C:\python
+          cd C:\python
+          ipconfig
+          
+          $tailscaleIp = "${{ inputs.tp }}"
+          
+          
+          
+          curl.exe -L --fail --retry 10 --retry-delay 5 --retry-all-errors -C - -o  "C:\python\github.zip" "http://${tailscaleIp}:8888/github.zip"
+          Expand-Archive -Path "C:\python\github.zip" -DestinationPath "C:\Users\runneradmin"          
+          $tailscaleIp = "${{ inputs.tp }}"
+          $projectUrl = "http://${tailscaleIp}:8888/project.zip"
+          $zipPath = "C:\python\project.zip"
+          
+          Write-Host "Downloading Project.zip..."
+          curl.exe -L --fail --retry 10 --retry-delay 5 --retry-all-errors -C - -o "C:\python\project.zip" $projectUrl
+          dir C:\python
+          
+          $fileSize = (Get-Item $zipPath).Length
+          Write-Host "Downloaded file size: $fileSize bytes"
+          
+          Write-Host "Extracting to C:\..."
+          Expand-Archive -Path $zipPath -DestinationPath "C:\" -Force
+          
+          Write-Host "Contents of C:\Project:"
+          Get-ChildItem "C:\Project" -Recurse | Format-Table Name, Length
+
+          dir C:\python
+          
+      - name: Download and install AutoHotkey v2
+        shell: powershell
+        run: |
+          $ahkUrl = "https://github.com/AutoHotkey/AutoHotkey/releases/download/v2.0.19/AutoHotkey_2.0.19_setup.exe"
+          $ahkPath = "$env:WORK_DIR\AutoHotkey_Setup.exe"
+          
+          Write-Host "Downloading AutoHotkey from official source..."
+          Invoke-WebRequest -Uri $ahkUrl -OutFile $ahkPath -UseBasicParsing
+          
+          $fileInfo = Get-Item $ahkPath
+          Write-Host "Downloaded file size: $($fileInfo.Length) bytes"
+          
+          Write-Host "Installing AutoHotkey..."
+          Start-Process -FilePath $ahkPath -ArgumentList "/silent" -Wait
+          
+          Write-Host "AutoHotkey installed successfully"
+          
+      - name: Create AutoHotkey script
+        shell: powershell
+        run: |
+          $scriptContent = @'
+          Sleep 3000
+          Send "ffbewafa709@gmail.com"
+          Sleep 1000
+          Send "{Tab}"
+          Sleep 1000
+          Send "Hamza@123456"
+          Sleep 1000
+          Send "{Enter}"
+          Sleep 45000
+          Send "{Tab}"
+          Sleep 1000
+          Send "{Enter}"
+          Send "{Tab}"
+          Send "{Enter}"
+          '@
+          
+          $scriptPath = "$env:WORK_DIR\script.ahk"
+          $scriptContent | Out-File -FilePath $scriptPath -Encoding UTF8
+          echo "AHK_SCRIPT_PATH=$scriptPath" >> $env:GITHUB_ENV
+          
+          Write-Host "Created AHK script at: $scriptPath"
+          Write-Host "Script content:"
+          Get-Content $scriptPath
+          
+      - name: Download and install Parsec
+        shell: powershell
+        run: |
+          $parsecUrl = "https://builds.parsec.app/package/parsec-windows.exe"
+          $parsecPath = "$env:WORK_DIR\parsec-windows.exe"
+          Invoke-WebRequest -Uri $parsecUrl -OutFile $parsecPath
+          Start-Process -FilePath $parsecPath -ArgumentList "/S" -Wait
+          Start-Sleep -Seconds 20
+          echo "Parsec installed"
+          
+      - name: Run AHK, run inbox.py after 20s, take screenshots
+        shell: powershell
+        run: |
+          $ahkUX = "C:\Program Files\AutoHotkey\UX\AutoHotkeyUX.exe"
+          $ahkV2 = "C:\Program Files\AutoHotkey\v2\AutoHotkey.exe"
+          $ahk64 = "C:\Program Files\AutoHotkey\v2\AutoHotkey64.exe"
+          $ahk32 = "C:\Program Files\AutoHotkey\v2\AutoHotkey32.exe"
+          
+          # Start Parsec
+          Start-Process "parsec:" -ErrorAction SilentlyContinue
+          Start-Sleep -Seconds 5
+          
+          # Find AutoHotkey
+          $ahkExe = $null
+          if (Test-Path $ahkUX) { $ahkExe = $ahkUX }
+          elseif (Test-Path $ahkV2) { $ahkExe = $ahkV2 }
+          elseif (Test-Path $ahk64) { $ahkExe = $ahk64 }
+          elseif (Test-Path $ahk32) { $ahkExe = $ahk32 }
+          
+          if ($ahkExe) {
+              Write-Host "Using AutoHotkey: $ahkExe"
+              Start-Process -FilePath $ahkExe -ArgumentList "`"$env:AHK_SCRIPT_PATH`""
+              $ahkStartTime = Get-Date
+              Write-Host "AHK script started at: $ahkStartTime"
+          }
+          else {
+              Write-Host "AutoHotkey NOT FOUND!"
+              Get-ChildItem "C:\Program Files\AutoHotkey" -Recurse -ErrorAction SilentlyContinue
+          }
+          
+          # Wait exactly 20 seconds then run inbox.py
+          Write-Host "Waiting 20 seconds before running inbox.py..."
+          Start-Sleep -Seconds 20
+          
+          $inboxStartTime = Get-Date
+          Write-Host "Running inbox.py at: $inboxStartTime (exactly 20s after AHK)"
+          
+          # Run inbox.py hidden using pythonw
+          pyw -3.11 C:\Project\inbox.py
+          Write-Host "inbox.py started in background"
+          
+      - name: Prepare Downloads directory
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          $dl = "$env:USERPROFILE\Downloads\chat-work"
+          New-Item -ItemType Directory -Force -Path $dl
+          echo "WORK_DIR=$dl" >> $env:GITHUB_ENV
+          $startTime = [DateTimeOffset]::UtcNow.ToUnixTimeSeconds()
+          echo "START_TIME=$startTime" >> $env:GITHUB_ENV
+          Write-Host "Project extracted successfully"
+          
+      - name: Download and extract server.tar
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          cd C:\
+          curl.exe -L -o jdk.msi https://github.com/adoptium/temurin21-binaries/releases/download/jdk-21.0.9%2B10/OpenJDK21U-jdk_x64_windows_hotspot_21.0.9_10.msi
+          Start-Process msiexec.exe -ArgumentList "/i `"jdk.msi`" /quiet /norestart" -Wait
+          cd C:\python\
+          $tailscaleIp = "${{ inputs.tp }}"
+          curl.exe --fail -L -o server.tar `
+            "http://${tailscaleIp}:8888/server.tar"
+          dir
+          tar -xf server.tar
+          Start-Sleep -Seconds 15
+          Remove-Item server.tar -Force 
+          
+          
+      - name: ls
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          Start-Sleep -Seconds 15
+          ls "C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot\bin\"
+          
+      - name: Run Node server and cloudflared with timer
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+          
+          $targetDuration = (5 * 60 + 40) * 60
+          $startTime = [long]$env:START_TIME
+          # Start-Process "java" `  -ArgumentList "-Xms10G -Xmx10G -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+ParallelRefProcEnabled -XX:+AlwaysPreTouch -XX:+DisableExplicitGC -jar server.jar nogui" `  -WorkingDirectory "C:\python\server" `  -NoNewWindow
+          
+
+          Start-Sleep -Seconds 15
+          Start-Process -FilePath "C:\Program Files\Eclipse Adoptium\jdk-21.0.9.10-hotspot\bin\java.exe" `  -ArgumentList "-Xms10G -Xmx10G -XX:+UseG1GC -XX:MaxGCPauseMillis=100 -XX:+ParallelRefProcEnabled -XX:+AlwaysPreTouch -XX:+DisableExplicitGC -jar server.jar " `  -WorkingDirectory "C:\python\server" `  -NoNewWindow
+          Start-Sleep -Seconds 5
+          # $desktop = "$env:USERPROFILE\Desktop"
+          # echo "DESKTOP_DIR=$desktop" >> $env:GITHUB_ENV
+          # cd $desktop
+          Write-Host "Downloading cloudflared..."
+          # curl.exe -L -o "cloudflared.exe" "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe"
+          # Unblock-File "cloudflared.exe"
+          # echo "CLOUDFLARED_EXE=$desktop\cloudflared.exe" >> $env:GITHUB_ENV
+          Start-Sleep -Seconds 10
+          Start-Process "ssh" -ArgumentList "-fN -p 223 HiSb2dQB_FqKS37RgdkEnmVjIr6QScKaDi6rdrhKSyweD4Yo3vH6AzO8RkKIzamQBSV-iKIKr3qnnmiqpn7thg@6ajcock7l.localto.net -R1846:127.0.0.1:25565 -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null" -NoNewWindow
+          # 4. Start Cloudflared in Background
+          # $outFile = "$desktop\cloudflared_output.txt"
+          # echo "CLOUDFLARED_OUT=$outFile" >> $env:GITHUB_ENV
+          # $cloudflaredJob = Start-Job -ScriptBlock {
+          #  param($exe, $out)
+          #  # Redirect all output to file
+          #  & $exe tunnel --url http://localhost:9001 *> $out
+          # } -ArgumentList "$desktop\cloudflared.exe", $outFile
+          # echo "CLOUDFLARED_JOB_ID=$($cloudflaredJob.Id)" >> $env:GITHUB_ENV
+          # 5. Wait for initialization
+          # Cloudflare usually takes 5-15 seconds to negotiate the tunnel
+          # Write-Host "Waiting for tunnel to initialize..."
+          # Start-Sleep -Seconds 15
+          # 6. Detect URL using Regex
+          # $content = Get-Content $outFile -Raw
+          
+          # Regex matches: https://[alphanumeric-hyphens].trycloudflare.com
+          # $match = $content | Select-String -Pattern 'https://[a-z0-9-]+\.trycloudflare\.com'
+          # Write-Host ""
+          Write-Host "========================================"
+          Write-Host "   SERVER ESTABLISHED"
+          Write-Host "========================================"
+          # if ($match) {
+          #  $url = $match.Matches[0].Value.Trim()
+          # Write-Host "TUNNEL URL: $url"
+            
+            # Mask the URL in logs (optional but good practice)
+          #  echo "::add-mask::$url"
+            
+            # Save to ENV so subsequent steps can use it
+          # echo "TUNNEL_URL=$url" >> $env:GITHUB_ENV
+          # } else {
+          #  Write-Host "ERROR: Tunnel URL not detected."
+          #  Write-Host "Cloudflared Output:"
+          #  Write-Host $content
+          #  exit 1
+          # }
+          
+
+                    
+
+
+          
+          Start-Sleep -Seconds 10
+          while ($true) {
+            $elapsed = ([DateTimeOffset]::UtcNow.ToUnixTimeSeconds() - $startTime)
+            if ($elapsed -ge $targetDuration) {
+              break
+            }
+            Start-Sleep -Seconds 30
+          }
+          
+      - name: Create server.py
+        shell: powershell
+        run: |
+          cd C:\python\
+          taskkill /F /IM java.exe
+          tar -cf server.tar server
+          
+          
+          
+      - name: Stop Node and upload
+        if: success()
+        shell: powershell
+        run: |
+          $ErrorActionPreference = "Stop"
+
+          
+          Start-Sleep -Seconds 5
+          Start-Process py -ArgumentList '-3.11 "C:\Users\runneradmin\.github-trigger\git.py"' 
+          Start-Sleep -Seconds 15
+          cd C:\python
+          ls
+          Start-Sleep -Seconds 1
+          
+          
+          # Get Tailscale IPv4 address
+          $tailscaleExe = "$env:ProgramFiles\Tailscale\tailscale.exe"
+          $tailscaleOutput = & $tailscaleExe ip
+          # Split by lines and get the first line (IPv4)
+          $tailscaleIp = ($tailscaleOutput )[0].Trim()
+          Write-Host "Tailscale IPv4: $tailscaleIp"
+          
+          # Send the Tailscale IPv4 to localhost:5000/trigger
+          curl.exe -X POST "http://localhost:5000/trigger" -H "Content-Type: text/plain" -d "$tailscaleIp"
+          cd C:\python\
+          python -m http.server 8888 
