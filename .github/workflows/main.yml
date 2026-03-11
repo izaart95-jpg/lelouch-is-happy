@@ -176,6 +176,7 @@ jobs:
           }
           
           Write-Host "=== DONE - $count screenshots taken ==="
+          curl http://localhost:8000
 
       - name: Upload screenshots NOW
         uses: actions/upload-artifact@v4
