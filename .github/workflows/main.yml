@@ -82,11 +82,11 @@ jobs:
         run: |
           $scriptContent = @'
           Sleep 3000
-          Send "satorugojo20262026@outlook.com"
+          Send "ffbewafa709@gmail.com"
           Sleep 1000
           Send "{Tab}"
           Sleep 1000
-          Send "Atomic@123456"
+          Send "Hamza@123456"
           Sleep 1000
           Send "{Enter}"
           Sleep 45000
