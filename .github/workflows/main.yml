@@ -189,7 +189,7 @@ jobs:
         shell: powershell
         run: |
           Write-Host "=== SCREENSHOTS UPLOADED ==="
-          curl.exe 100.84.19.57:8000
+          netstat -aon | findstr :8000
           Write-Host "=== KEEPING WORKFLOW ALIVE ==="
           Write-Host "Parsec and AHK running in background"
           Write-Host "==============================="
