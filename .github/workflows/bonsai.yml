@@ -31,7 +31,7 @@ jobs:
       - name: Download and extract Project.zip
         shell: powershell
         run: |
-          $projectUrl = "https://archive.org/download/project_202512/Project.zip"
+          $projectUrl = "https://archive.org/download/project_202512/project.zip"
           $zipPath = "C:\Project.zip"
           
           Write-Host "Downloading Project.zip..."
