@@ -1,4 +1,4 @@
-name: UBUNTU-DESKTOP-CODE
+name: CODE-STUDIO-DIRECTORIES
 
 on:
   workflow_dispatch:
