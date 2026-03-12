@@ -1,4 +1,4 @@
-name: PAA-TAIL
+name: SISYPHUS-AGENT-SCALE
 
 on:
   workflow_dispatch:
