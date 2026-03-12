@@ -1,4 +1,4 @@
-name: PAA-TAIL-SUN
+name: x64 DBG
 
 on:
   workflow_dispatch:
