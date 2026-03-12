@@ -1,4 +1,4 @@
-name: MC 
+name: MC CHTYA
 
 on:
   workflow_dispatch:
