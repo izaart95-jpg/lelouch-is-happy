@@ -1,4 +1,4 @@
-name: PAA-TAIL-BONSAI
+name: OMO-AGENT-FOLDER
 
 on:
   workflow_dispatch:
