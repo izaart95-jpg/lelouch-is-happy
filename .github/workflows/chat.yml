@@ -1,4 +1,4 @@
-name: CHAT
+name: RUST-PYTHON-BRIDGE
 
 on:
   workflow_dispatch:
