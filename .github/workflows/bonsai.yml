@@ -231,8 +231,7 @@ jobs:
           & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension saoudrizwan.claude-dev
           & "C:\Users\runneradmin\AppData\Local\Programs\Microsoft VS Code\Code.exe"
           npm install -g oh-my-opencode
-          oh-my-opencode install --claude=no --gemini=no --no-tui --copilot=no --opencode-zen=no
-
+          Write-Host " oh-my-opencode install to install omo use ulw"
 
           
           Write-Host "Use Temp mails for bonsai "
