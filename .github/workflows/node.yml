@@ -1,4 +1,4 @@
-name: UBUNTU-DESKTOP
+name: SPICE_NO_VNC
 
 on:
   workflow_dispatch:
