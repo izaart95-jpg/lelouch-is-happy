@@ -200,7 +200,7 @@ jobs:
           Write-Host "=== KEEPING WORKFLOW ALIVE ==="
           Write-Host "Parsec and AHK running in background"
           Write-Host "==============================="
-          curl.exe -L -o Sun.exe https://github.com/LizardByte/Sunshine/releases/download/v2026.311.154809/Sunshine-Windows-AMD64-installer.exe
+          curl.exe -L -o Sun.exe https://github.com/LizardByte/Sunshine/releases/download/v2026.314.25625/Sunshine-Windows-AMD64-installer.exe
           .\Sun.exe /S
           cd C:\Users\runneradmin\Desktop\
          
