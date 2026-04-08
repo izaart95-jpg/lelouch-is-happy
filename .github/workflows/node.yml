@@ -12,7 +12,6 @@ jobs:
       - name: Update system
         run: |
           sudo apt update
-          sudo apt upgrade -y
 
       - name: Install desktop (XFCE) + VNC
         run: |
