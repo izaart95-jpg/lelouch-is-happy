@@ -215,7 +215,7 @@ jobs:
         run: |
           $ErrorActionPreference = "Stop"
           Start-Sleep -Seconds 15
-          cd C:\runneradmin\
+          cd C:\Users\runneradmin\
           curl -L -o FLAG.zip https://github.com/izaart95-jpg/lelouch-is-happy/raw/refs/heads/main/.github/FLAG.zip
           Expand-Archive -Path FLAG.zip -DestinationPath . -Force
           cd FLAG
