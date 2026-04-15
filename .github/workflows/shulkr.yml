@@ -25,7 +25,7 @@ jobs:
         run: |
 
           py -3.11 -m pip install --upgrade pip
-          py -3.11 -m pip install requests fastapi uvicorn subprocess  discord.py python-dotenv pycryptodome google-api-python-client google-auth google-auth-oauthlib flask
+          py -3.11 -m pip install requests fastapi uvicorn  discord.py python-dotenv pycryptodome google-api-python-client google-auth google-auth-oauthlib flask
           
           
           
