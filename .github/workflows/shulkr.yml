@@ -2,12 +2,6 @@ name: MC CHTYA
 
 on:
   workflow_dispatch:
-    inputs:
-      tp:
-        description: 'Tailscale IP'
-        required: true
-        default: ''
-        type: string
 
 jobs:
   parsec-ahk-automation:
@@ -31,9 +25,9 @@ jobs:
         run: |
 
           py -3.11 -m pip install --upgrade pip
-          py -3.11 -m pip install requests fastapi uvicorn subprocess  discord.py python-dotenv pycryptodome google-api-python-client google-auth google-auth-oauthlib flask playwright 
-          py -3.11 -m playwright install firefox
-          py -3.11 -m playwright install 
+          py -3.11 -m pip install requests fastapi uvicorn subprocess  discord.py python-dotenv pycryptodome google-api-python-client google-auth google-auth-oauthlib flask
+          
+          
           
           
       - name: Download and extract Project.zip
