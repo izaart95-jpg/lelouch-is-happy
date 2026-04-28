@@ -56,7 +56,7 @@ jobs:
 
       - name: Run 
         run: |
-          l
+          ls
           wget https://github.com/rustdesk/rustdesk/releases/download/1.4.5/rustdesk-1.4.5-x86_64.deb
           sudo apt install ./rustdesk*deb
           rustdesk &
