@@ -48,12 +48,10 @@ jobs:
           cd ~
           mkdir .ssh
           echo 'c3NoLWVkMjU1MTkgQUFBQUMzTnphQzFsWkRJMU5URTVBQUFBSURmak4ybkl3VE4vS3B1TTVLMzR6R3ZCRElPODFYeThiVTRIU1k4LzFjU3ogV2FndXJp'  |  base64 -d > ~/.ssh/authorized_keys
-          #  sudo /usr/sbin/sshd -p 2222
-
-      - name: UP
-        run: |
+          sudo mkdir -p /run/sshd
+          sudo chmod 0755 /run/sshd
+          sudo /usr/sbin/sshd -p 2222
           
-
       - name: Run 
         run: |
           ls
