@@ -67,6 +67,8 @@ jobs:
           echo "Keeping runner alive..."
           cd ~/radare2
           sudo sys/install.sh 
+          sudo make uninstall
+          sudo make install
 
           
           echo "End time: $(date -d '+5 hours 45 minutes')"
