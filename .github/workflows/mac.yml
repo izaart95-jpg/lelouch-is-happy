@@ -1,4 +1,4 @@
-name: HMIC-AGENT-FILES
+name: MAC 
 
 on:
   workflow_dispatch:
