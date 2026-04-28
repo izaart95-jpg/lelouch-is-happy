@@ -63,9 +63,6 @@ jobs:
           r2pm -Uci r2mcp
           r2pm -ci r2ghidra
           rm -rf ~/radare2
-          wget https://github.com/rustdesk/rustdesk/releases/download/1.4.5/rustdesk-1.4.5-x86_64.deb
-          sudo apt install ./rustdesk*deb
-          rustdesk &
           wget https://github.com/pansila/mcp_server_gdb/releases/download/v0.2.3/mcp-server-gdb_0.2.3-x86_64-unknown-linux-musl.tar.gz
           mkdir gdb-mcp
           tar -xzf mcp-server-gdb_0.2.3-x86_64-unknown-linux-musl.tar.gz -C gdb-mcp
