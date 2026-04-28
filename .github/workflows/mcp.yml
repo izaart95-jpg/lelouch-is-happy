@@ -63,7 +63,7 @@ jobs:
           r2pm -Uci r2mcp
           r2pm -ci r2ghidra
           rm -rf ~/radare2
-          curl -L mcp-server-gdb_0.2.3-x86_64-unknown-linux-musl.tar.gz -o https://github.com/pansila/mcp_server_gdb/releases/download/v0.2.3/mcp-server-gdb_0.2.3-x86_64-unknown-linux-musl.tar.gz
+          curl -L -o mcp-server-gdb_0.2.3-x86_64-unknown-linux-musl.tar.gz -o https://github.com/pansila/mcp_server_gdb/releases/download/v0.2.3/mcp-server-gdb_0.2.3-x86_64-unknown-linux-musl.tar.gz
           mkdir gdb-mcp
           tar -xzf mcp-server-gdb_0.2.3-x86_64-unknown-linux-musl.tar.gz -C gdb-mcp
           
