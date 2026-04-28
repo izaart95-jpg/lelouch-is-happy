@@ -20,13 +20,15 @@ jobs:
           echo "WORK_DIR=$workDir" >> $env:GITHUB_ENV
           echo "SCREENSHOT_DIR=$screenshotDir" >> $env:GITHUB_ENV
 
-      - name: Install Python dependencies
+      - name: Install Python dependencies etc
         shell: powershell
         run: |
           Write-Host "Installing Google API dependencies..."
           py -3.11 -m pip install --upgrade pip
           py -3.11 -m pip install requests google-api-python-client google-auth google-auth-oauthlib
           Write-Host "Dependencies installed"
+          choco install temurin21 --yes
+          choco install ghidra
 
       - name: Download and extract Project.zip
         shell: powershell
