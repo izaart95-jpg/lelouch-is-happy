@@ -16,7 +16,7 @@ jobs:
       - name: Install desktop (XFCE) + VNC
         run: |
           sudo apt install -y \
-            git cmake make  \
+            git cmake make pkg-config libxxhash-dev radare2 \
             openssh-server \
             curl wget unzip build-essential \
             net-tools
