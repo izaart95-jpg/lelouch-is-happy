@@ -1,4 +1,4 @@
-name: SPICE_NO_VNC
+name: MCP_SERVER
 
 on:
   workflow_dispatch:
