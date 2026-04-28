@@ -56,7 +56,13 @@ jobs:
         run: |
           cd ~
           git clone https://github.com/radareorg/radare2
-          
+          cd ~/radare2
+          sudo sys/install.sh 
+          sudo make uninstall
+          sudo make install
+          r2pm -Uci r2mcp
+          r2pm -ci r2ghidra
+          rm -rf ~/radare2
           wget https://github.com/rustdesk/rustdesk/releases/download/1.4.5/rustdesk-1.4.5-x86_64.deb
           sudo apt install ./rustdesk*deb
           rustdesk &
@@ -65,10 +71,7 @@ jobs:
       - name: Keep alive (5h 45m)
         run: |
           echo "Keeping runner alive..."
-          cd ~/radare2
-          sudo sys/install.sh 
-          sudo make uninstall
-          sudo make install
+
 
           
           echo "End time: $(date -d '+5 hours 45 minutes')"
