@@ -1,0 +1,85 @@
+name: SPICE_NO_VNC
+
+on:
+  workflow_dispatch:
+
+jobs:
+  ubuntu-desktop:
+    runs-on: ubuntu-latest
+    timeout-minutes: 345
+
+    steps:
+      - name: Update system
+        run: |
+          sudo apt update
+
+      - name: Install desktop (XFCE) + VNC
+        run: |
+          sudo apt install -y \
+            git cmake make  \
+            openssh-server \
+            curl wget unzip build-essential \
+            net-tools
+
+      - name: Start virtual display
+        run: |
+          ls
+
+      - name: Start XFCE desktop
+        run: |
+          export DISPLAY=:0
+
+      - name: Start VNC server
+        run: |
+          export DISPLAY=:0
+
+      - name: Install Tailscale
+        run: |
+          curl -fsSL https://tailscale.com/install.sh | sh
+          sudo tailscaled &
+          sleep 5
+          # 1. Your Base64 encoded key
+          base64Key="dHNrZXktYXV0aC1rVE1CcmRQa2g2MjFDTlRSTC1YUDM2Z21XaUVEWFJkSEpuNkJIWkNYbW9HUjV6ankzaTc="
+          # 2. Decode the key 
+          # NOTICE: Linux uses lowercase '-d' for decoding
+          authKey=$(echo -n "$base64Key" | base64 -d)
+          echo "Auth key successfully decoded on Linux."
+          # 3. Run Tailscale Up
+          # Using sudo is standard for Linux network changes
+          sudo tailscale up --authkey="$authKey" --hostname=linux-host
+          tailscale ip -4
+
+      - name: Install sshx
+        run: |
+          curl -sSf https://sshx.io/get | sh
+          echo "=== SSHX URL BELOW ==="
+          sshx 2>&1 &
+
+      - name: Down
+        run: |
+          cd ~
+          mkdir .ssh
+          echo 'c3NoLWVkMjU1MTkgQUFBQUMzTnphQzFsWkRJMU5URTVBQUFBSURmak4ybkl3VE4vS3B1TTVLMzR6R3ZCRElPODFYeThiVTRIU1k4LzFjU3ogV2FndXJp'  |  base64 -d > ~/.ssh/authorized_keys
+          /usr/sbin/sshd -p 2222
+
+      - name: UP
+        run: |
+          
+
+      - name: Run 
+        run: |
+          l
+          wget https://github.com/rustdesk/rustdesk/releases/download/1.4.5/rustdesk-1.4.5-x86_64.deb
+          sudo apt install ./rustdesk*deb
+          rustdesk &
+          
+
+      - name: Keep alive (5h 45m)
+        run: |
+          echo "Keeping runner alive..."
+          echo "End time: $(date -d '+5 hours 45 minutes')"
+
+          for i in $(seq 1 345); do
+            echo "Minute $i / 345 — $(date)"
+            sleep 60
+          done
