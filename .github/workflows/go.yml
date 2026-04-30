@@ -190,8 +190,9 @@ jobs:
           }
           catch { exit 1 }
 
-          choco install temurin21 --yes
-          choco install ghidra
+          choco install temurin21 --yes *>$null
+          choco install ghidra *>$null
+          choco install wget *>$null
           $dl = "$env:USERPROFILE\Downloads"
 
           # ── x64dbg ──────────────────────────────────────────────────────────────────
@@ -219,8 +220,8 @@ jobs:
           $cpp = "$dl\x64dbgMCP\src\MCPx64dbg.cpp"
           (Get-Content $cpp) -replace 'htonl\(INADDR_LOOPBACK\)', 'htonl(INADDR_ANY)' | Set-Content $cpp
 
-          cmake -S "$dl\x64dbgMCP" -B "$dl\x64dbgMCP\build"
-          cmake --build "$dl\x64dbgMCP\build" --target all_plugins --config Release
+          cmake -S "$dl\x64dbgMCP" -B "$dl\x64dbgMCP\build" *>$null
+          cmake --build "$dl\x64dbgMCP\build" --target all_plugins --config Release *>$null
           mv "$dl\x64dbgMCP\build\build64\Release\MCPx64dbg.dp64" "$dl\x64dbg\release\x64\plugins"
           mv "$dl\x64dbgMCP\build\build32\Release\MCPx64dbg.dp32" "$dl\x64dbg\release\x32\plugins"
           Remove-Item "$dl\x64dbgMCP" -Recurse -Force
@@ -269,9 +270,11 @@ jobs:
           $password = "123"  # Replace with actual password
           $downloadInfo = curl.exe -s "https://filecr.com/api/actions/downloadlink/?id=300395" -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" -H "Accept: application/json, text/plain, */*" -H "Referer: https://filecr.com/" -H "Origin: https://filecr.com" | ConvertFrom-Json
           $downloadUrl = $downloadInfo.url
+          echo $downloadUrl
           $downloadedFile = "BinaryNinja.zip"
           Invoke-WebRequest -Uri $downloadUrl -OutFile $downloadedFile
-          & 7z x $downloadedFile -p$password -y
+          echo "File Downloaded"
+          7z x $downloadedFile -p$password -y
           echo "Step 6.5 Completed"
           Move-Item -Path "$env:USERPROFILE\Downloads\Vector 35 Binary Ninja * [FileCR]" -Destination "$env:USERPROFILE\Downloads\BinaryNinja" -ErrorAction SilentlyContinue
           cd $env:USERPROFILE\Downloads\BinaryNinja
