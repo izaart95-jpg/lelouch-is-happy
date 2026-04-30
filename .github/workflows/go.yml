@@ -281,6 +281,30 @@ jobs:
           cd BinaryNinja
           Get-ChildItem -Filter "*exe" | ForEach-Object { Start-Process $_.FullName -ArgumentList '/S' -Wait }
           cp -r $dl\BinaryNinja\crack\binaryninjacore.dll $env:LOCALAPPDATA\Programs\Vector35\BinaryNinja\
+          mkdir "$env:APPDATA\Binary Ninja"
+          $licenseDir = "$env:APPDATA\Binary Ninja"
+          if (-not (Test-Path $licenseDir)) {
+              New-Item -ItemType Directory -Path $licenseDir -Force | Out-Null
+              Write-Host "Created directory: $licenseDir"
+          }
+          $licenseContent = @'
+          [
+          {
+          "count": 32,
+          "created": "2026-04-04T16:51:16.00+00:00",
+          "data": "GxzduIEL7i1qsBuWof+VMu/ongjWN+TkgrkNnP2gk5eiKNKQ1HtfmPDSnFp/3omjsWbdIgcxVmxPJk1C1bKNF9hqZc078vzAfR3lBetV8/QUPk/jfpbHNZdgaZTuQVF6oyq/9h03ba361x8fTC57KwK3G9WkLuFIRK2KF7EVhsjtrweT4RNZZ1BJcS4KL8hSYhpqgOHASaw8VthVhPXVCp1CZi3xTmj3ZbsEvI0hg3Abr2NrnhaqaWmietXQquZHmysES7SwQ2Qjdf9QPMtTjhe+Lx5B9qqIsduZH/79YIfPsgh1kgGStnG+i3OB9+GzPY/1ITQp8RD+R1y8dLPs0rZVLEEgp4eEVSEPee5viMPIxDF6dAzIFg==",
+          "email": "binja@incorporated.inc",
+          "product": "Binary Ninja Personal",
+          "serial": "1b1cddb8810bee2d6ab01b96a1ff9532",
+          "signature": "HBjIxPAwbRvu+pH8etZgCfSJMmz/t8vmk9+dUKxY8NptU9KRwg+20oJNNUJenjaRbXX482lsKBzu37XFQuxo5/ILbjqwOm9hv884Vr32Ef/iQ0Uer4jcX227Sxth3puMzvWWmBdMgBhMVYrDTUu5i0WGLy0VfaLy9vAClfuwBZTugqOFf7DATZdzF5g4v/cnu5QAPnjZFNkQ3Jlo8h7eeOSxYa+13kQ83rp4Qg1Bj/cqt/yqk1RdvWvXe4Yh23APy0Jax14atvWVUiBGTjIJdTQysmgPB1nt8I1VhhnFmwOHD1w265Rx1DzVgi+fP/wXfuxH/quGMFg2uHzJEjVBWQ==",
+          "type": "User",
+          "released" : "amped"
+          }
+          ]
+          '@
+          $licensePath = Join-Path $licenseDir "license.dat"
+          $licenseContent | Out-File -FilePath $licensePath -Encoding UTF8 -Force
+          Write-Host "License file created successfully at: $licensePath"
 
 
           
