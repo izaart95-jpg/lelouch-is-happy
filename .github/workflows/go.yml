@@ -203,6 +203,9 @@ jobs:
           Remove-Item $filename -Force
           mkdir -p x64dbg/release/x64/plugins
           mkdir -p x64dbg/release/x32/plugins
+          cd x64dbg/release
+          "`r`n[XAutomate]`r`nBindAddress=0.0.0.0`r`nMode=remote`r`nPubSubPort=69BA`r`nReqRepPort=69BB`r`n" | Out-File -FilePath "x64\x64dbg.ini" -Append -Encoding UTF8
+          "`r`n[XAutomate]`r`nBindAddress=0.0.0.0`r`nMode=remote`r`nPubSubPort=69BA`r`nReqRepPort=69BB`r`n" | Out-File -FilePath "x32\x32dbg.ini" -Append -Encoding UTF8
           git clone https://github.com/Wasdubya/x64dbgMCP
           cd x64dbgMCP
           mkdir deps
@@ -246,8 +249,20 @@ jobs:
           Expand-Archive -Path $fileName -DestinationPath "."
           Remove-Item $filename -Force
 
+          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/dariushoule/x64dbg-automate/releases/latest"
+          $downloadUrl = $release.assets | Where-Object { $_.name -match "^release32-\d+\.\d+\.\d+-.*\.zip$" -and $_.name -notmatch "symbols" } | Select-Object -First 1 -ExpandProperty browser_download_url
+          Invoke-WebRequest -Uri $downloadUrl -OutFile (Split-Path $downloadUrl -Leaf)
+          $fileName = Split-Path $downloadUrl -Leaf
+          Expand-Archive -Path $fileName -DestinationPath $env:USERPROFILE\Downloads\x64dbg\release\x32\plugins
+          Remove-Item $filename -Force
 
-
+          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/dariushoule/x64dbg-automate/releases/latest"
+          $downloadUrl = $release.assets | Where-Object { $_.name -match "^release64-\d+\.\d+\.\d+-.*\.zip$" -and $_.name -notmatch "symbols" } | Select-Object -First 1 -ExpandProperty browser_download_url
+          Invoke-WebRequest -Uri $downloadUrl -OutFile (Split-Path $downloadUrl -Leaf)
+          $fileName = Split-Path $downloadUrl -Leaf
+          Expand-Archive -Path $fileName -DestinationPath $env:USERPROFILE\Downloads\x64dbg\release\x64\plugins
+          Remove-Item $filename -Force
+          
       - name: Keep alive for 6 hours
         shell: powershell
         run: |
