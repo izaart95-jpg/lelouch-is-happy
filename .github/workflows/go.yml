@@ -104,7 +104,7 @@ jobs:
           Start-Sleep -Seconds 20
           echo "Parsec installed"
 
-      - name: Run AHK
+      - name: Run AHK and connect 
         shell: powershell
         run: |
           $ahkUX = "C:\Program Files\AutoHotkey\UX\AutoHotkeyUX.exe"
@@ -189,7 +189,10 @@ jobs:
               }
           }
           catch { exit 1 }
-
+          
+      - name: Build Set MCP and apps
+        shell: powershell
+        run: |
           choco install temurin21 --yes *>$null
           choco install ghidra *>$null
           choco install wget *>$null
@@ -282,6 +285,7 @@ jobs:
           Get-ChildItem -Filter "*exe" | ForEach-Object { Start-Process $_.FullName -ArgumentList '/S' -Wait }
           cp -r $dl\BinaryNinja\crack\binaryninjacore.dll $env:LOCALAPPDATA\Programs\Vector35\BinaryNinja\
           mkdir "$env:APPDATA\Binary Ninja"
+          mkdir "$env:APPDATA\Binary Ninja\plugins"
           $licenseDir = "$env:APPDATA\Binary Ninja"
           if (-not (Test-Path $licenseDir)) {
               New-Item -ItemType Directory -Path $licenseDir -Force | Out-Null
@@ -305,7 +309,9 @@ jobs:
           $licensePath = Join-Path $licenseDir "license.dat"
           $licenseContent | Out-File -FilePath $licensePath -Encoding UTF8 -Force
           Write-Host "License file created successfully at: $licensePath"
-
+          cd "$env:APPDATA\Binary Ninja\plugins\"
+          git clone https://github.com/fosdickio/binary_ninja_mcp.git
+          
 
           
       - name: Keep alive for 6 hours
