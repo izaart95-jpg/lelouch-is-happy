@@ -24,8 +24,8 @@ jobs:
         shell: powershell
         run: |
           Write-Host "Installing Google API dependencies..."
-          py -3.11 -m pip install --upgrade pip
-          py -3.11 -m pip install requests google-api-python-client google-auth google-auth-oauthlib 
+          py -3.11 -m pip install --upgrade pip *>$null
+          py -3.11 -m pip install requests google-api-python-client google-auth google-auth-oauthlib *>$null
           Write-Host "Dependencies installed"          
           
       - name: Download and extract Project.zip
@@ -253,35 +253,31 @@ jobs:
           $url = $release.assets | Where-Object { $_.name -match "^release32-\d+\.\d+\.\d+-.*\.zip$" -and $_.name -notmatch "symbols" } |
           Select-Object -First 1 -ExpandProperty browser_download_url
           $file = Split-Path $url -Leaf
-          Invoke-WebRequest $url -OutFile $file
+          wget $url
           Expand-Archive $file -DestinationPath "$dl\x64dbg\release\x32\plugins"
           Remove-Item $file -Force
           $release = Invoke-RestMethod "https://api.github.com/repos/dariushoule/x64dbg-automate/releases/latest"
           $url = $release.assets | Where-Object { $_.name -match "^release64-\d+\.\d+\.\d+-.*\.zip$" -and $_.name -notmatch "symbols" } |
           Select-Object -First 1 -ExpandProperty browser_download_url
           $file = Split-Path $url -Leaf
-          Invoke-WebRequest $url -OutFile $file
-          Expand-Archive $file -DestinationPath "$dl\x64dbg\release\x64\plugins"
+          wget $url
+          Expand-Archive $file -DestinationPath "$dl\x64dbg\release\x64\plugins" *>$null
           Remove-Item $file -Force
           mv $dl\x64dbg\release\x64\plugins\Release\* $dl\x64dbg\release\x64\plugins
           Remove-Item $dl\x64dbg\release\x64\plugins\Release\ -Recurse -Force
-          echo "Step 6 Completed"
           # --- Binary Ninja Download & Extract ---
           $password = "123"  # Replace with actual password
           $downloadInfo = curl.exe -s "https://filecr.com/api/actions/downloadlink/?id=300395" -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" -H "Accept: application/json, text/plain, */*" -H "Referer: https://filecr.com/" -H "Origin: https://filecr.com" | ConvertFrom-Json
           $downloadUrl = $downloadInfo.url
           echo $downloadUrl
           $downloadedFile = "BinaryNinja.zip"
-          Invoke-WebRequest -Uri $downloadUrl -OutFile $downloadedFile
-          echo "File Downloaded"
+          wget $downloadUrl 
           echo "Extracting with pass: $pass"
           7z x $downloadedFile -p123 -y
-          echo "Step 6.5 Completed"
           Get-ChildItem -Directory -Filter "Vector 35 Binary Ninja*" | Move-Item -Destination "BinaryNinja"
           cd BinaryNinja
           Get-ChildItem -Filter "*exe" | ForEach-Object { Start-Process $_.FullName -ArgumentList '/S' -Wait }
           cp -r $dl\BinaryNinja\crack\binaryninjacore.dll $env:LOCALAPPDATA\Programs\Vector35\BinaryNinja\
-          echo "Step 7 Completed"
 
           
       - name: Keep alive for 6 hours
