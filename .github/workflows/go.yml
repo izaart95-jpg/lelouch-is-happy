@@ -24,11 +24,11 @@ jobs:
         shell: powershell
         run: |
           Write-Host "Installing Google API dependencies..."
-          py -3.11 -m pip install --upgrade pip
-          py -3.11 -m pip install requests google-api-python-client google-auth google-auth-oauthlib
+          py -3.11 -m pip install --upgrade pip >nul 2>&1
+          py -3.11 -m pip install requests google-api-python-client google-auth google-auth-oauthlib >nul 2>&1
           Write-Host "Dependencies installed"
-          choco install temurin21 --yes
-          choco install ghidra
+          choco install temurin21 --yes >nul 2>&1
+          choco install ghidra >nul 2>&1
           cd $env:USERPROFILE\Downloads
           $release = Invoke-RestMethod -Uri "https://api.github.com/repos/x64dbg/x64dbg/releases/latest"
           $downloadUrl = $release.assets | Where-Object { $_.name -match "^snapshot_.*\.zip$" -and $_.name -notmatch "symbols" } | Select-Object -First 1 -ExpandProperty browser_download_url
@@ -39,7 +39,7 @@ jobs:
           mkdir -p x64dbg/release/x32/plugins
           git clone https://github.com/Wasdubya/x64dbgMCP
           mkdir -p x64dvgMCP/deps
-          cp -r x64dbg/pluginsk/* ./x64dbgMCP/deps
+          cp -r x64dbg/pluginsdk/* ./x64dbgMCP/deps
           cd x64dbgMCP
           cmake -S . -B build
           cmake --build build --target all_plugins --config Release
