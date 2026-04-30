@@ -33,17 +33,16 @@ jobs:
           $release = Invoke-RestMethod -Uri "https://api.github.com/repos/x64dbg/x64dbg/releases/latest"
           $downloadUrl = $release.assets | Where-Object { $_.name -match "^snapshot_.*\.zip$" -and $_.name -notmatch "symbols" } | Select-Object -First 1 -ExpandProperty browser_download_url
           Invoke-WebRequest -Uri $downloadUrl -OutFile (Split-Path $downloadUrl -Leaf)
-          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/Wasdubya/x64dbgMCP/releases/latest"
-          $downloadUrl = $release.assets | Where-Object { $_.name -match "^MCP_.*\.zip$" -and $_.name -notmatch "symbols" } | Select-Object -First 1 -ExpandProperty browser_download_url
-          Invoke-WebRequest -Uri $downloadUrl -OutFile (Split-Path $downloadUrl -Leaf)
           mkdir x64dbg
           unzip snapshot_*zip -d x64dbg
           mkdir -p x64dbg/release/x64/plugins
           mkdir -p x64dbg/release/x32/plugins
-          unzip MCP_*zip
-          mv MCPx64dbg.dp64 x64dbg/release/x64/plugins
-          mv MCPx64dbg.dp32 x64dbg/release/x32/plugins
-          rm MCP_*zip
+          git clone https://github.com/Wasdubya/x64dbgMCP
+          mkdir -p x64dvgMCP/deps
+          cp -r x64dbg/pluginsk/* ./x64dbgMCP/deps
+          cd x64dbgMCP
+          cmake -S . -B build
+          cmake --build build --target all_plugins --config Release
           
           
       - name: Download and extract Project.zip
