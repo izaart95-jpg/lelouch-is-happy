@@ -220,7 +220,7 @@ jobs:
           $cpp = "$dl\x64dbgMCP\src\MCPx64dbg.cpp"
           (Get-Content $cpp) -replace 'htonl\(INADDR_LOOPBACK\)', 'htonl(INADDR_ANY)' | Set-Content $cpp
 
-          cmake -S "$dl\x64dbgMCP" -B "$dl\x64dbgMCP\build" *>$null
+          cmake -S "$dl\x64dbgMCP" -B "$dl\x64dbgMCP\build" *>$null 
           cmake --build "$dl\x64dbgMCP\build" --target all_plugins --config Release *>$null
           mv "$dl\x64dbgMCP\build\build64\Release\MCPx64dbg.dp64" "$dl\x64dbg\release\x64\plugins"
           mv "$dl\x64dbgMCP\build\build32\Release\MCPx64dbg.dp32" "$dl\x64dbg\release\x32\plugins"
@@ -272,8 +272,11 @@ jobs:
           $downloadUrl = $downloadInfo.url
           echo $downloadUrl
           $downloadedFile = "BinaryNinja.zip"
-          wget $downloadUrl
+          $firefoxProcess = Start-Process "C:\Program Files\Mozilla Firefox\firefox.exe" -ArgumentList $downloadUrl -PassThru
+          Start-Sleep -Seconds 18
+          Stop-Process -Id $firefoxProcess.Id -Force
           echo "File Downloaded; Extracting with $password"
+          Get-ChildItem -File -Filter "Vector 35 Binary Ninja*" | Move-Item -DestinationPath $downloadedFile
           7z x $downloadedFile -p123 -y
           echo "Step 6.5 Completed"
           Get-ChildItem -Directory -Filter "Vector 35 Binary Ninja*" | Move-Item -Destination "BinaryNinja"
