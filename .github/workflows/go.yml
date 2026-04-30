@@ -274,10 +274,14 @@ jobs:
           $downloadedFile = "BinaryNinja.zip"
           Invoke-WebRequest -Uri $downloadUrl -OutFile $downloadedFile
           echo "File Downloaded"
-          7z x $downloadedFile -p$password -y
+          echo "Extracting with pass: $pass"
+          7z x $downloadedFile -p123 -y
           echo "Step 6.5 Completed"
-          Move-Item -Path "$env:USERPROFILE\Downloads\Vector 35 Binary Ninja * [FileCR]" -Destination "$env:USERPROFILE\Downloads\BinaryNinja" -ErrorAction SilentlyContinue
-          cd $env:USERPROFILE\Downloads\BinaryNinja
+          Get-ChildItem -Directory -Filter "Vector 35 Binary Ninja*" | Move-Item -Destination "BinaryNinja"
+          cd BinaryNinja
+          Get-ChildItem -Filter "*exe" | ForEach-Object { Start-Process $_.FullName -ArgumentList '/S' -Wait }
+          cp -r $dl\BinaryNinja\crack\binaryninjacore.dll $env:LOCALAPPDATA\Programs\Vector35\BinaryNinja\
+          echo "Step 7 Completed"
 
           
       - name: Keep alive for 6 hours
