@@ -193,6 +193,7 @@ jobs:
           choco install temurin21 --yes
           choco install ghidra
           cd $env:USERPROFILE\Downloads
+          echo "Step 1"
           $release = Invoke-RestMethod -Uri "https://api.github.com/repos/x64dbg/x64dbg/releases/latest"
           $downloadUrl = $release.assets | Where-Object { $_.name -match "^snapshot_.*\.zip$" -and $_.name -notmatch "symbols" } | Select-Object -First 1 -ExpandProperty browser_download_url
           Invoke-WebRequest -Uri $downloadUrl -OutFile (Split-Path $downloadUrl -Leaf)
@@ -220,6 +221,7 @@ jobs:
           New-Item -ItemType Directory -Path "ghidra_12.0.4_PUBLIC" -Force 
           cd ghidra_12.0.4_PUBLIC
           New-Item -ItemType Directory -Path "Extensions" -Force
+          echo "Step 2"
           cd Extensions
           $release = Invoke-RestMethod -Uri "https://api.github.com/repos/cyberkaida/reverse-engineering-assistant/releases/latest"
           $downloadUrl = $release.assets | Where-Object { $_.name -match "^ghidra_12.0.4_PUBLIC_.*\.zip$" -and $_.name -notmatch "symbols" } | Select-Object -First 1 -ExpandProperty browser_download_url
