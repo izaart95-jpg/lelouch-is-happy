@@ -211,7 +211,7 @@ jobs:
           echo "Step 1 Completed"
 
           # ── x64dbgMCP ───────────────────────────────────────────────────────────────
-          git clone https://github.com/Wasdubya/x64dbgMCP $dl\x64dbgMCP *>$null 
+          git clone https://github.com/Wasdubya/x64dbgMCP $dl\x64dbgMCP | Out-Null
           Remove-Item "$dl\x64dbgMCP\deps" -Recurse -Force -ErrorAction SilentlyContinue
           New-Item -ItemType Directory "$dl\x64dbgMCP\deps" -Force
           cp -r "$dl\x64dbg\pluginsdk\*" "$dl\x64dbgMCP\deps"
