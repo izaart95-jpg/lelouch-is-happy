@@ -272,12 +272,9 @@ jobs:
           $downloadUrl = $downloadInfo.url
           echo $downloadUrl
           $downloadedFile = "BinaryNinja.zip"
-          & "C:\Program Files\Mozilla Firefox\firefox.exe" $downloadUrl
-          Start-Sleep -Seconds 18
-          taskkill /IM /F firefox.exe 
+          curl.exe -L -o $downloadedFile $downloadUrl
           echo "File Downloaded; Extracting with $password"
-          curl.exe -L -o Binja.zip $downloadUrl
-          Get-ChildItem -File -Filter "Vector 35 Binary Ninja*" | Move-Item -DestinationPath $downloadedFile
+          Get-ChildItem -File -Filter "Vector 35 Binary Ninja*" | Move-Item -Destination $downloadedFile
           7z x $downloadedFile -p123 -y
           echo "Step 6.5 Completed"
           Get-ChildItem -Directory -Filter "Vector 35 Binary Ninja*" | Move-Item -Destination "BinaryNinja"
