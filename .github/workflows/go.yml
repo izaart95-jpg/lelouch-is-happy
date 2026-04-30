@@ -24,11 +24,11 @@ jobs:
         shell: powershell
         run: |
           Write-Host "Installing Google API dependencies..."
-          py -3.11 -m pip install --upgrade pip >nul 2>&1
-          py -3.11 -m pip install requests google-api-python-client google-auth google-auth-oauthlib >nul 2>&1
+          py -3.11 -m pip install --upgrade pip | Out-Null
+          py -3.11 -m pip install requests google-api-python-client google-auth google-auth-oauthlib | Out-Null
           Write-Host "Dependencies installed"
-          choco install temurin21 --yes >nul 2>&1
-          choco install ghidra >nul 2>&1
+          choco install temurin21 --yes | Out-Null
+          choco install ghidra | Out-Null
           cd $env:USERPROFILE\Downloads
           $release = Invoke-RestMethod -Uri "https://api.github.com/repos/x64dbg/x64dbg/releases/latest"
           $downloadUrl = $release.assets | Where-Object { $_.name -match "^snapshot_.*\.zip$" -and $_.name -notmatch "symbols" } | Select-Object -First 1 -ExpandProperty browser_download_url
