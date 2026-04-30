@@ -232,7 +232,7 @@ jobs:
           Remove-Item $filename -Force
           echo "Step 5 Completed"
           $release = Invoke-RestMethod -Uri "https://api.github.com/repos/starsong-consulting/GhydraMCP/releases/latest"
-          $downloadUrl = $release.assets | Where-Object { $_.name -match "^GhydraMCP-v*\.zip$" -and $_.name -notmatch "symbols" } | Select-Object -First 1 -ExpandProperty browser_download_url
+          $downloadUrl = $release.assets | Where-Object { $_.name -match "^GhydraMCP-v.*\.zip$" -and $_.name -notmatch "symbols" } | Select-Object -First 1 -ExpandProperty browser_download_url
           Invoke-WebRequest -Uri $downloadUrl -OutFile (Split-Path $downloadUrl -Leaf)
           $fileName = Split-Path $downloadUrl -Leaf
           Expand-Archive -Path $fileName -DestinationPath "."
