@@ -200,18 +200,18 @@ jobs:
           $release = Invoke-RestMethod "https://api.github.com/repos/x64dbg/x64dbg/releases/latest"
           $url = $release.assets | Where-Object { $_.name -match "^snapshot_.*\.zip$" -and $_.name -notmatch "symbols" } |
           Select-Object -First 1 -ExpandProperty browser_download_url
-          Invoke-WebRequest $url -OutFile (Split-Path $url -Leaf)
-          mkdir x64dbg; unzip snapshot_*zip -d x64dbg
-          Remove-Item (Split-Path $url -Leaf) -Force
-          mkdir -p x64dbg/release/x64/plugins, x64dbg/release/x32/plugins
+          Invoke-WebRequest $url -OutFile (Split-Path $url -Leaf) *>$null
+          mkdir x64dbg; unzip snapshot_*zip -d x64dbg *>$null 
+          Remove-Item (Split-Path $url -Leaf) -Force *>$null 
+          mkdir -p x64dbg/release/x64/plugins, x64dbg/release/x32/plugins *>$null 
 
-          $iniBlock = "`r`n[XAutomate]`r`nBindAddress=0.0.0.0`r`nMode=remote`r`nPubSubPort=69BA`r`nReqRepPort=69BB`r`n"
+          $iniBlock = "[XAutomate]`r`nBindAddress=0.0.0.0`r`nMode=remote`r`nPubSubPort=69BA`r`nReqRepPort=69BB`r`n"
           $iniBlock | Out-File -FilePath "$dl\x64dbg\release\x64\x64dbg.ini" -Append -Encoding UTF8
           $iniBlock | Out-File -FilePath "$dl\x64dbg\release\x32\x32dbg.ini" -Append -Encoding UTF8
           echo "Step 1 Completed"
 
           # ── x64dbgMCP ───────────────────────────────────────────────────────────────
-          git clone https://github.com/Wasdubya/x64dbgMCP $dl\x64dbgMCP
+          git clone https://github.com/Wasdubya/x64dbgMCP $dl\x64dbgMCP *>$null 
           Remove-Item "$dl\x64dbgMCP\deps" -Recurse -Force -ErrorAction SilentlyContinue
           New-Item -ItemType Directory "$dl\x64dbgMCP\deps" -Force
           cp -r "$dl\x64dbg\pluginsdk\*" "$dl\x64dbgMCP\deps"
@@ -243,7 +243,7 @@ jobs:
            Select-Object -First 1 -ExpandProperty browser_download_url
           $file = Split-Path $url -Leaf
           Invoke-WebRequest $url -OutFile "$ext\$file"
-          Expand-Archive "$ext\$file" -DestinationPath $ext
+          Expand-Archive "$ext\$file" -DestinationPath $ext *>$null 
           Remove-Item "$ext\$file" -Force
           }
           echo "Step 5 Completed"
@@ -253,15 +253,15 @@ jobs:
           $url = $release.assets | Where-Object { $_.name -match "^release32-\d+\.\d+\.\d+-.*\.zip$" -and $_.name -notmatch "symbols" } |
           Select-Object -First 1 -ExpandProperty browser_download_url
           $file = Split-Path $url -Leaf
-          Invoke-WebRequest $url -OutFile $file
-          Expand-Archive $file -DestinationPath "$dl\x64dbg\release\x32\plugins"
+          Invoke-WebRequest $url -OutFile $file *>$null 
+          Expand-Archive $file -DestinationPath "$dl\x64dbg\release\x32\plugins" *>$null 
           Remove-Item $file -Force
           $release = Invoke-RestMethod "https://api.github.com/repos/dariushoule/x64dbg-automate/releases/latest"
           $url = $release.assets | Where-Object { $_.name -match "^release64-\d+\.\d+\.\d+-.*\.zip$" -and $_.name -notmatch "symbols" } |
           Select-Object -First 1 -ExpandProperty browser_download_url
           $file = Split-Path $url -Leaf
           Invoke-WebRequest $url -OutFile $file
-          Expand-Archive $file -DestinationPath "$dl\x64dbg\release\x64\plugins"
+          Expand-Archive $file -DestinationPath "$dl\x64dbg\release\x64\plugins" *>$null 
           Remove-Item $file -Force
           mv $dl\x64dbg\release\x64\plugins\Release\* $dl\x64dbg\release\x64\plugins
           Remove-Item $dl\x64dbg\release\x64\plugins\Release\ -Recurse -Force
