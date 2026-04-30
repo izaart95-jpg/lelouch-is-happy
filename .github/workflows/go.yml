@@ -1,4 +1,4 @@
-name: SISYPHUS-AGENT-SCALE
+name: SISYPHUS-AGENT
 
 on:
   workflow_dispatch:
@@ -247,7 +247,7 @@ jobs:
           }
           echo "Step 5 Completed"
 
-              # ── x64dbg-automate (x32) ────────────────────────────────────────────────────
+              # ── x64dbg-automate  ────────────────────────────────────────────────────
              $release = Invoke-RestMethod "https://api.github.com/repos/dariushoule/x64dbg-automate/releases/latest"
                $url = $release.assets | Where-Object { $_.name -match "^release32-\d+\.\d+\.\d+-.*\.zip$" -and $_.name -notmatch "symbols" } |
               Select-Object -First 1 -ExpandProperty browser_download_url
@@ -255,6 +255,13 @@ jobs:
               Invoke-WebRequest $url -OutFile $file
           Expand-Archive $file -DestinationPath "$dl\x64dbg\release\x32\plugins"
           Remove-Item $file -Force
+             $release = Invoke-RestMethod "https://api.github.com/repos/dariushoule/x64dbg-automate/releases/latest"
+               $url = $release.assets | Where-Object { $_.name -match "^release64-\d+\.\d+\.\d+-.*\.zip$" -and $_.name -notmatch "symbols" } |
+              Select-Object -First 1 -ExpandProperty browser_download_url
+          $file = Split-Path $url -Leaf
+              Invoke-WebRequest $url -OutFile $file
+          Expand-Archive $file -DestinationPath "$dl\x64dbg\release\x64\plugins"
+          Remove-Item $file -Force          
           
       - name: Keep alive for 6 hours
         shell: powershell
