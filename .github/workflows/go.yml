@@ -199,6 +199,8 @@ jobs:
           Invoke-WebRequest -Uri $downloadUrl -OutFile (Split-Path $downloadUrl -Leaf)
           mkdir x64dbg
           unzip snapshot_*zip -d x64dbg
+          $fileName = Split-Path $downloadUrl -Leaf
+          Remove-Item $filename -Force
           mkdir -p x64dbg/release/x64/plugins
           mkdir -p x64dbg/release/x32/plugins
           git clone https://github.com/Wasdubya/x64dbgMCP
@@ -237,7 +239,12 @@ jobs:
           $fileName = Split-Path $downloadUrl -Leaf
           Expand-Archive -Path $fileName -DestinationPath "."
           Remove-Item $filename -Force
-          
+          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/bethington/ghidra-mcp/releases/latest"
+          $downloadUrl = $release.assets | Where-Object { $_.name -match "^GhidraMCP-\d+\.\d+\.\d+\.zip$" -and $_.name -notmatch "symbols" } | Select-Object -First 1 -ExpandProperty browser_download_url
+          Invoke-WebRequest -Uri $downloadUrl -OutFile (Split-Path $downloadUrl -Leaf)
+          $fileName = Split-Path $downloadUrl -Leaf
+          Expand-Archive -Path $fileName -DestinationPath "."
+          Remove-Item $filename -Force
 
 
 
