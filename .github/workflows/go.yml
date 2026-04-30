@@ -225,7 +225,7 @@ jobs:
           echo "Step 4 Completed"
           cd Extensions
           $release = Invoke-RestMethod -Uri "https://api.github.com/repos/cyberkaida/reverse-engineering-assistant/releases/latest"
-          $downloadUrl = $release.assets | Where-Object { $_.name -match "^ghidra_12.0.4*\.zip$" -and $_.name -notmatch "symbols" } | Select-Object -First 1 -ExpandProperty browser_download_url
+          $downloadUrl = $release.assets | Where-Object { $_.name -match "ghidra_12\.0\.4.*reverse-engineering-assistant.*\.zip" -and $_.name -notmatch "symbols" } | Select-Object -First 1 -ExpandProperty browser_download_url
           Invoke-WebRequest -Uri $downloadUrl -OutFile (Split-Path $downloadUrl -Leaf)
           $fileName = Split-Path $downloadUrl -Leaf
           Expand-Archive -Path $fileName -DestinationPath "."
