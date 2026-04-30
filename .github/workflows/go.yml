@@ -261,7 +261,9 @@ jobs:
           $file = Split-Path $url -Leaf
               Invoke-WebRequest $url -OutFile $file
           Expand-Archive $file -DestinationPath "$dl\x64dbg\release\x64\plugins"
-          Remove-Item $file -Force          
+          Remove-Item $file -Force
+          mv $dl\x64dbg\release\x64\plugins\Release\* $dl\x64dbg\release\x64\plugins
+          Remove-Item $dl\x64dbg\release\x64\plugins\Release\ -Recurse -Force
           
       - name: Keep alive for 6 hours
         shell: powershell
