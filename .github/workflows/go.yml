@@ -210,6 +210,10 @@ jobs:
           cd x64dbgMCP
           mkdir deps
           cd $env:USERPROFILE\Downloads
+          if (Test-Path "x64dbgMCP/deps") {
+              Remove-Item -Path "x64dbgMCP/deps" -Recurse -Force
+          }
+          New-Item -ItemType Directory -Path "x64dbgMCP/deps" -Force
           cp -r x64dbg/pluginsdk/* x64dbgMCP/deps
           cd x64dbgMCP
           (Get-Content src/MCPx64dbg.cpp) -replace 'htonl\(INADDR_LOOPBACK\)', 'htonl(INADDR_ANY)' | Set-Content src/MCPx64dbg.cpp
