@@ -212,7 +212,27 @@ jobs:
           cd $env:USERPROFILE\Downloads\x64dbg\release
           mv C:/Users/runneradmin/Downloads/x64dbgMCP/build/build64/Release/MCPx64dbg.dp64 x64\plugins
           mv C:/Users/runneradmin/Downloads/x64dbgMCP/build/build32/Release/MCPx64dbg.dp32 x32\plugins
-          
+          cd $env:USERPROFILE\Downloads
+          Remove-Item x64dbgMCP -Recurse -Force
+          cd $env:APPDATA\
+          New-Item -ItemType Directory -Path "ghidra" -Force
+          cd $env:APPDATA\ghidra\
+          New-Item -ItemType Directory -Path "ghidra_12.0.4_PUBLIC" -Force 
+          cd ghidra_12.0.4_PUBLIC
+          New-Item -ItemType Directory -Path "Extensions" -Force
+          cd Extensions
+          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/cyberkaida/reverse-engineering-assistant/releases/latest"
+          $downloadUrl = $release.assets | Where-Object { $_.name -match "^ghidra_12.0.4_PUBLIC_.*\.zip$" -and $_.name -notmatch "symbols" } | Select-Object -First 1 -ExpandProperty browser_download_url
+          Invoke-WebRequest -Uri $downloadUrl -OutFile (Split-Path $downloadUrl -Leaf)
+          $fileName = Split-Path $downloadUrl -Leaf
+          Expand-Archive -Path $fileName -DestinationPath "."
+          Remove-Item $filename -Force
+          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/starsong-consulting/GhydraMCP/releases/latest"
+          $downloadUrl = $release.assets | Where-Object { $_.name -match "^GhydraMCP-v*\.zip$" -and $_.name -notmatch "symbols" } | Select-Object -First 1 -ExpandProperty browser_download_url
+          Invoke-WebRequest -Uri $downloadUrl -OutFile (Split-Path $downloadUrl -Leaf)
+          $fileName = Split-Path $downloadUrl -Leaf
+          Expand-Archive -Path $fileName -DestinationPath "."
+          Remove-Item $filename -Force
           
 
 
