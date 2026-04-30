@@ -29,7 +29,9 @@ jobs:
           Write-Host "Dependencies installed"
           choco install temurin21 --yes
           choco install ghidra
-          cmd /c 'curl.exe -s https://api.github.com/repos/x64dbg/x64dbg/releases/latest | jq -r ".assets[] | select(.name | test(\"^snapshot_.*\\.zip$\") and (test(\"symbols\") | not)) | .browser_download_url" | xargs curl.exe -L -O'
+          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/x64dbg/x64dbg/releases/latest"
+          $downloadUrl = $release.assets | Where-Object { $_.name -match "^snapshot_.*\.zip$" -and $_.name -notmatch "symbols" } | Select-Object -First 1 -ExpandProperty browser_download_url
+          Invoke-WebRequest -Uri $downloadUrl -OutFile (Split-Path $downloadUrl -Leaf)
           
 
       - name: Download and extract Project.zip
