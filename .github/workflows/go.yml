@@ -20,33 +20,13 @@ jobs:
           echo "WORK_DIR=$workDir" >> $env:GITHUB_ENV
           echo "SCREENSHOT_DIR=$screenshotDir" >> $env:GITHUB_ENV
 
-      - name: Install Python dependencies etc
+      - name: Install Python dependencies
         shell: powershell
         run: |
           Write-Host "Installing Google API dependencies..."
           py -3.11 -m pip install --upgrade pip
           py -3.11 -m pip install requests google-api-python-client google-auth google-auth-oauthlib 
-          Write-Host "Dependencies installed"
-          choco install temurin21 --yes
-          choco install ghidra
-          cd $env:USERPROFILE\Downloads
-          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/x64dbg/x64dbg/releases/latest"
-          $downloadUrl = $release.assets | Where-Object { $_.name -match "^snapshot_.*\.zip$" -and $_.name -notmatch "symbols" } | Select-Object -First 1 -ExpandProperty browser_download_url
-          Invoke-WebRequest -Uri $downloadUrl -OutFile (Split-Path $downloadUrl -Leaf)
-          mkdir x64dbg
-          unzip snapshot_*zip -d x64dbg
-          mkdir -p x64dbg/release/x64/plugins
-          mkdir -p x64dbg/release/x32/plugins
-          git clone https://github.com/Wasdubya/x64dbgMCP
-          cd x64dbgMCP
-          mkdir deps
-          cd $env:USERPROFILE\Downloads
-          cp -r x64dbg/pluginsdk/* x64dbgMCP/deps
-          cd x64dbgMCP
-          (Get-Content src/MCPx64dbg.cpp) -replace 'htonl\(INADDR_LOOPBACK\)', 'htonl(INADDR_ANY)' | Set-Content src/MCPx64dbg.cpp
-          cmake -S . -B build
-          cmake --build build --target all_plugins --config Release
-          
+          Write-Host "Dependencies installed"          
           
       - name: Download and extract Project.zip
         shell: powershell
@@ -124,7 +104,7 @@ jobs:
           Start-Sleep -Seconds 20
           echo "Parsec installed"
 
-      - name: Run AHK, run inbox.py after 20s, take screenshots
+      - name: Run AHK
         shell: powershell
         run: |
           $ahkUX = "C:\Program Files\AutoHotkey\UX\AutoHotkeyUX.exe"
@@ -209,6 +189,29 @@ jobs:
               }
           }
           catch { exit 1 }
+
+          choco install temurin21 --yes
+          choco install ghidra
+          cd $env:USERPROFILE\Downloads
+          $release = Invoke-RestMethod -Uri "https://api.github.com/repos/x64dbg/x64dbg/releases/latest"
+          $downloadUrl = $release.assets | Where-Object { $_.name -match "^snapshot_.*\.zip$" -and $_.name -notmatch "symbols" } | Select-Object -First 1 -ExpandProperty browser_download_url
+          Invoke-WebRequest -Uri $downloadUrl -OutFile (Split-Path $downloadUrl -Leaf)
+          mkdir x64dbg
+          unzip snapshot_*zip -d x64dbg
+          mkdir -p x64dbg/release/x64/plugins
+          mkdir -p x64dbg/release/x32/plugins
+          git clone https://github.com/Wasdubya/x64dbgMCP
+          cd x64dbgMCP
+          mkdir deps
+          cd $env:USERPROFILE\Downloads
+          cp -r x64dbg/pluginsdk/* x64dbgMCP/deps
+          cd x64dbgMCP
+          (Get-Content src/MCPx64dbg.cpp) -replace 'htonl\(INADDR_LOOPBACK\)', 'htonl(INADDR_ANY)' | Set-Content src/MCPx64dbg.cpp
+          cmake -S . -B build
+          cmake --build build --target all_plugins --config Release
+          cd $env:USERPROFILE\Downloads\x64dbg\release
+          mv C:/Users/runneradmin/Downloads/x64dbgMCP/build/build64/Release/MCPx64dbg.dp64 x64\plugins
+          mv C:/Users/runneradmin/Downloads/x64dbgMCP/build/build32/Release/MCPx64dbg.dp32 x32\plugins
           
           
 
