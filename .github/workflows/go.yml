@@ -269,11 +269,12 @@ jobs:
           $password = "123"  # Replace with actual password
           $downloadInfo = curl.exe -s "https://filecr.com/api/actions/downloadlink/?id=300395" -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" -H "Accept: application/json, text/plain, */*" -H "Referer: https://filecr.com/" -H "Origin: https://filecr.com" | ConvertFrom-Json
           $downloadUrl = $downloadInfo.url
-          $downloadedFile = Split-Path $downloadUrl -Leaf
+          $downloadedFile = BinaryNinja.zip
           Invoke-WebRequest -Uri $downloadUrl -OutFile $downloadedFile
           & 7z x $downloadedFile -p$password -y
           echo "Step 6.5 Completed"
-          
+          Move-Item -Path "$env:USERPROFILE\Downloads\Vector 35 Binary Ninja * [FileCR]" -Destination "$env:USERPROFILE\Downloads\BinaryNinja" -ErrorAction SilentlyContinue
+          cd $env:USERPROFILE\Downloads\BinaryNinja
 
           
       - name: Keep alive for 6 hours
