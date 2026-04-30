@@ -43,7 +43,7 @@ jobs:
           cd $env:USERPROFILE\Downloads
           cp -r x64dbg/pluginsdk/* x64dbgMCP/deps
           cd x64dbgMCP
-          (Get-Content MCPx64dbg.cpp) -replace 'htonl\(INADDR_LOOPBACK\)', 'htonl(INADDR_ANY)' | Set-Content src/MCPx64dbg.cpp
+          (Get-Content src/MCPx64dbg.cpp) -replace 'htonl\(INADDR_LOOPBACK\)', 'htonl(INADDR_ANY)' | Set-Content src/MCPx64dbg.cpp
           cmake -S . -B build
           cmake --build build --target all_plugins --config Release
           
