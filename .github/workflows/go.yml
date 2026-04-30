@@ -195,57 +195,57 @@ jobs:
           $dl = "$env:USERPROFILE\Downloads"
 
           # ── x64dbg ──────────────────────────────────────────────────────────────────
-         cd $dl
-         $release = Invoke-RestMethod "https://api.github.com/repos/x64dbg/x64dbg/releases/latest"
-         $url = $release.assets | Where-Object { $_.name -match "^snapshot_.*\.zip$" -and $_.name -notmatch "symbols" } |
-         Select-Object -First 1 -ExpandProperty browser_download_url
-         Invoke-WebRequest $url -OutFile (Split-Path $url -Leaf)
-         mkdir x64dbg; unzip snapshot_*zip -d x64dbg
-         Remove-Item (Split-Path $url -Leaf) -Force
-         mkdir -p x64dbg/release/x64/plugins, x64dbg/release/x32/plugins
+          cd $dl
+          $release = Invoke-RestMethod "https://api.github.com/repos/x64dbg/x64dbg/releases/latest"
+          $url = $release.assets | Where-Object { $_.name -match "^snapshot_.*\.zip$" -and $_.name -notmatch "symbols" } |
+          Select-Object -First 1 -ExpandProperty browser_download_url
+          Invoke-WebRequest $url -OutFile (Split-Path $url -Leaf)
+          mkdir x64dbg; unzip snapshot_*zip -d x64dbg
+          Remove-Item (Split-Path $url -Leaf) -Force
+          mkdir -p x64dbg/release/x64/plugins, x64dbg/release/x32/plugins
 
-         $iniBlock = "`r`n[XAutomate]`r`nBindAddress=0.0.0.0`r`nMode=remote`r`nPubSubPort=69BA`r`nReqRepPort=69BB`r`n"
-         $iniBlock | Out-File -FilePath "$dl\x64dbg\release\x64\x64dbg.ini" -Append -Encoding UTF8
-         $iniBlock | Out-File -FilePath "$dl\x64dbg\release\x32\x32dbg.ini" -Append -Encoding UTF8
-         echo "Step 1 Completed"
+          $iniBlock = "`r`n[XAutomate]`r`nBindAddress=0.0.0.0`r`nMode=remote`r`nPubSubPort=69BA`r`nReqRepPort=69BB`r`n"
+          $iniBlock | Out-File -FilePath "$dl\x64dbg\release\x64\x64dbg.ini" -Append -Encoding UTF8
+          $iniBlock | Out-File -FilePath "$dl\x64dbg\release\x32\x32dbg.ini" -Append -Encoding UTF8
+          echo "Step 1 Completed"
 
           # ── x64dbgMCP ───────────────────────────────────────────────────────────────
-         git clone https://github.com/Wasdubya/x64dbgMCP $dl\x64dbgMCP
-         Remove-Item "$dl\x64dbgMCP\deps" -Recurse -Force -ErrorAction SilentlyContinue
-         New-Item -ItemType Directory "$dl\x64dbgMCP\deps" -Force
-         cp -r "$dl\x64dbg\pluginsdk\*" "$dl\x64dbgMCP\deps"
+          git clone https://github.com/Wasdubya/x64dbgMCP $dl\x64dbgMCP
+          Remove-Item "$dl\x64dbgMCP\deps" -Recurse -Force -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory "$dl\x64dbgMCP\deps" -Force
+          cp -r "$dl\x64dbg\pluginsdk\*" "$dl\x64dbgMCP\deps"
 
-         # FIX: use full path so the file is found regardless of working directory
-         $cpp = "$dl\x64dbgMCP\src\MCPx64dbg.cpp"
-         (Get-Content $cpp) -replace 'htonl\(INADDR_LOOPBACK\)', 'htonl(INADDR_ANY)' | Set-Content $cpp
+          # FIX: use full path so the file is found regardless of working directory
+          $cpp = "$dl\x64dbgMCP\src\MCPx64dbg.cpp"
+          (Get-Content $cpp) -replace 'htonl\(INADDR_LOOPBACK\)', 'htonl(INADDR_ANY)' | Set-Content $cpp
 
-         cmake -S "$dl\x64dbgMCP" -B "$dl\x64dbgMCP\build"
-         cmake --build "$dl\x64dbgMCP\build" --target all_plugins --config Release
-         mv "$dl\x64dbgMCP\build\build64\Release\MCPx64dbg.dp64" "$dl\x64dbg\release\x64\plugins"
-         mv "$dl\x64dbgMCP\build\build32\Release\MCPx64dbg.dp32" "$dl\x64dbg\release\x32\plugins"
-         Remove-Item "$dl\x64dbgMCP" -Recurse -Force
-         echo "Step 3 Completed"
+          cmake -S "$dl\x64dbgMCP" -B "$dl\x64dbgMCP\build"
+          cmake --build "$dl\x64dbgMCP\build" --target all_plugins --config Release
+          mv "$dl\x64dbgMCP\build\build64\Release\MCPx64dbg.dp64" "$dl\x64dbg\release\x64\plugins"
+          mv "$dl\x64dbgMCP\build\build32\Release\MCPx64dbg.dp32" "$dl\x64dbg\release\x32\plugins"
+          Remove-Item "$dl\x64dbgMCP" -Recurse -Force
+          echo "Step 3 Completed"
 
-         # ── Ghidra extensions ────────────────────────────────────────────────────────
-         $ext = "$env:APPDATA\ghidra\ghidra_12.0.4_PUBLIC\Extensions"
-         New-Item -ItemType Directory $ext -Force
-         echo "Step 4 Completed"
+          # ── Ghidra extensions ────────────────────────────────────────────────────────
+          $ext = "$env:APPDATA\ghidra\ghidra_12.0.4_PUBLIC\Extensions"
+          New-Item -ItemType Directory $ext -Force
+          echo "Step 4 Completed"
 
-         foreach ($repo in @(
+          foreach ($repo in @(
                  "cyberkaida/reverse-engineering-assistant|ghidra_12\.0\.4.*reverse-engineering-assistant.*\.zip",
                  "starsong-consulting/GhydraMCP|^GhydraMCP-v.*\.zip$",
                 "bethington/ghidra-mcp|^GhidraMCP-\d+\.\d+\.\d+\.zip$"
-         )) {
-         $r, $pat = $repo -split "\|"
-         $url = (Invoke-RestMethod "https://api.github.com/repos/$r/releases/latest").assets |
-           Where-Object { $_.name -match $pat -and $_.name -notmatch "symbols" } |
+          )) {
+          $r, $pat = $repo -split "\|"
+          $url = (Invoke-RestMethod "https://api.github.com/repos/$r/releases/latest").assets |
+            Where-Object { $_.name -match $pat -and $_.name -notmatch "symbols" } |
            Select-Object -First 1 -ExpandProperty browser_download_url
           $file = Split-Path $url -Leaf
-         Invoke-WebRequest $url -OutFile "$ext\$file"
-         Expand-Archive "$ext\$file" -DestinationPath $ext
-         Remove-Item "$ext\$file" -Force
-         }
-         echo "Step 5 Completed"
+          Invoke-WebRequest $url -OutFile "$ext\$file"
+          Expand-Archive "$ext\$file" -DestinationPath $ext
+          Remove-Item "$ext\$file" -Force
+          }
+          echo "Step 5 Completed"
 
               # ── x64dbg-automate (x32) ────────────────────────────────────────────────────
              $release = Invoke-RestMethod "https://api.github.com/repos/dariushoule/x64dbg-automate/releases/latest"
@@ -254,7 +254,7 @@ jobs:
           $file = Split-Path $url -Leaf
               Invoke-WebRequest $url -OutFile $file
           Expand-Archive $file -DestinationPath "$dl\x64dbg\release\x32\plugins"
-         Remove-Item $file -Force
+          Remove-Item $file -Force
           
       - name: Keep alive for 6 hours
         shell: powershell
