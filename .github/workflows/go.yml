@@ -279,7 +279,7 @@ jobs:
           echo "File Downloaded; Extracting with $password"
           Get-ChildItem -File -Filter "Vector 35 Binary Ninja*" | Move-Item -Destination $downloadedFile
           7z x $downloadedFile -p123 -y
-          Remove-Item -File -Force $downloadedFile
+          Remove-Item $downloadedFile -Force
           echo "Step 6.5 Completed"
           Get-ChildItem -Directory -Filter "Vector 35 Binary Ninja*" | Move-Item -Destination "BinaryNinja"
           cd BinaryNinja
@@ -336,7 +336,7 @@ jobs:
           7z x $downloadedFile -p123 -y
           $ida = Get-ChildItem -Path "$env:USERPROFILE\Downloads" -Directory -Filter "IDA*" | Select-Object -ExpandProperty FullName
           cd $dl
-          Remove-Item -File -Force $downloadedFile
+          Remove-Item $downloadedFile -Force
           $licenseDir = "$env:APPDATA\Hex-Rays\IDA Pro"
           if (-not (Test-Path $licenseDir)) {
               New-Item -ItemType Directory -Path $licenseDir -Force | Out-Null
