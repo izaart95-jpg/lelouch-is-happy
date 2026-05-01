@@ -317,6 +317,7 @@ jobs:
           git clone https://github.com/Invoke-RE/binja-lattice-mcp.git
           cd binja-lattice-mcp
           cp -r plugin ..\
+          cd ..
           Remove-Item binja-lattice-mcp -Recurse -Force
           
 
