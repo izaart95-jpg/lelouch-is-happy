@@ -342,7 +342,7 @@ jobs:
               New-Item -ItemType Directory -Path $licenseDir -Force | Out-Null
               Write-Host "Created directory: $licenseDir"
           }
-          curl -L -o $licenseDir\idapro.hexlic https://raw.githubusercontent.com/benzis-alt/IDA-Pro-9.1/refs/heads/main/other%20files%20you%20need/idapro.hexlic
+          curl.exe -L -o $licenseDir\idapro.hexlic https://raw.githubusercontent.com/benzis-alt/IDA-Pro-9.1/refs/heads/main/other%20files%20you%20need/idapro.hexlic
           cd "$ida"
           $exe = Get-ChildItem -File -Filter ida*exe | Select-Object -ExpandProperty FullName
           & $exe --mode unattended --installer-language en --prefix "C:\Program Files\ida-pro-9.3" --install_python 1
