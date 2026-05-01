@@ -311,6 +311,13 @@ jobs:
           Write-Host "License file created successfully at: $licensePath"
           cd "$env:APPDATA\Binary Ninja\plugins\"
           git clone https://github.com/fosdickio/binary_ninja_mcp.git
+          cd binary_ninja_mcp\plugin
+          $cpp = "__init__.py"
+          (Get-Content $cpp) -replace 'plugin\.config\.server\.host = "0\.0\.0\.0" if expose_to_network else "localhost"', 'plugin.config.server.host = "0.0.0.0"' | Set-Content $cpp
+          git clone https://github.com/Invoke-RE/binja-lattice-mcp.git
+          cd binja-lattice-mcp
+          cp -r plugin ..\
+          Remove-Item binja-lattice-mcp -Recurse -Force
           
 
           
