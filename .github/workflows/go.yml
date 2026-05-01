@@ -279,6 +279,7 @@ jobs:
           echo "File Downloaded; Extracting with $password"
           Get-ChildItem -File -Filter "Vector 35 Binary Ninja*" | Move-Item -Destination $downloadedFile
           7z x $downloadedFile -p123 -y
+          Remove-Item -File -Force $downloadedFile
           echo "Step 6.5 Completed"
           Get-ChildItem -Directory -Filter "Vector 35 Binary Ninja*" | Move-Item -Destination "BinaryNinja"
           cd BinaryNinja
@@ -323,6 +324,33 @@ jobs:
           $config = $config -replace 'api_key = "use_a_strong_api_key_here"', 'api_key = Waguri'
           $config | Set-Content config.ini
           Remove-Item "$env:APPDATA\Binary Ninja\plugins\binja-lattice-mcp" -Recurse -Force
+          cd $dl
+          $password = "123"  # Replace with actual password
+          $downloadInfo = curl.exe -s "https://filecr.com/api/actions/downloadlink/?id=314603" -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" -H "Accept: application/json, text/plain, */*" -H "Referer: https://filecr.com/" -H "Origin: https://filecr.com" | ConvertFrom-Json
+          $downloadUrl = $downloadInfo.url
+          echo $downloadUrl
+          $downloadedFile = "IDA-Pro.zip"
+          curl.exe -L -o $downloadedFile $downloadUrl
+          echo "File Downloaded; Extracting with $password"
+          Get-ChildItem -File -Filter "IDA*" | Move-Item -Destination $downloadedFile
+          7z x $downloadedFile -p123 -y
+          $ida = Get-ChildItem -Path "$env:USERPROFILE\Downloads" -Directory -Filter "IDA*" | Select-Object -ExpandProperty FullName
+          cd $dl
+          Remove-Item -File -Force $downloadedFile
+          $licenseDir = "$env:APPDATA\Hex-Rays\IDA Pro"
+          if (-not (Test-Path $licenseDir)) {
+              New-Item -ItemType Directory -Path $licenseDir -Force | Out-Null
+              Write-Host "Created directory: $licenseDir"
+          }
+          curl -L -o $licenseDir\idapro.hexlic https://raw.githubusercontent.com/benzis-alt/IDA-Pro-9.1/refs/heads/main/other%20files%20you%20need/idapro.hexlic
+          cd "$ida"
+          $exe = Get-ChildItem -File -Filter ida*exe | Select-Object -ExpandProperty FullName
+          & $exe --mode unattended --installer-language en --prefix "C:\Program Files\ida-pro-9.3" --install_python 1
+          Start-Sleep 25
+          Copy-Item .\fix*\* "C:\Program Files\ida-pro-9.3\" -Recurse -Force
+          & "C:\Program Files\ida-pro-9.3\ida.exe"
+          pip install https://github.com/mrexodia/ida-pro-mcp/archive/refs/heads/main.zip | Out-Null
+          ida-pro-mcp --install cline --scope global --transport streamable-http | Out-Null
           
 
           
