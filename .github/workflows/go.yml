@@ -314,11 +314,15 @@ jobs:
           cd binary_ninja_mcp\plugin
           $cpp = "__init__.py"
           (Get-Content $cpp) -replace 'plugin\.config\.server\.host = "0\.0\.0\.0" if expose_to_network else "localhost"', 'plugin.config.server.host = "0.0.0.0"' | Set-Content $cpp
+          cd "$env:APPDATA\Binary Ninja\plugins\"
           git clone https://github.com/Invoke-RE/binja-lattice-mcp.git
-          cd binja-lattice-mcp
-          cp -r plugin ..\
-          cd ..
-          Remove-Item binja-lattice-mcp -Recurse -Force
+          Copy-Item -Recurse "$env:APPDATA\Binary Ninja\plugins\binja-lattice-mcp\plugin\*" "$env:APPDATA\Binary Ninja\plugins\"
+          cd "$env:APPDATA\Binary Ninja\plugins\"
+          $config = Get-Content config.ini
+          $config = $config -replace 'ip_address = "127.0.0.1"', 'ip_address = 0.0.0.0'
+          $config = $config -replace 'api_key = "use_a_strong_api_key_here"', 'api_key = Waguri'
+          $config | Set-Content config.ini
+          Remove-Item "$env:APPDATA\Binary Ninja\plugins\binja-lattice-mcp" -Recurse -Force
           
 
           
