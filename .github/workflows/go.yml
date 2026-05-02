@@ -220,9 +220,8 @@ jobs:
           $plugins_x32 = "$dl/x64dbg/release/x32/plugins/"          
           
           $mcpConfig = '{"version":"1.0.6","server":{"address":"0.0.0.0","port":3001},"permissions":{"allow_memory_write":true,"allow_register_write":true,"allow_script_execution":true,"allow_breakpoint_modification":true,"allowed_methods":["debug.*","register.*","memory.*","breakpoint.*","disasm.*","disassembly.*","module.*","symbol.*","thread.*","stack.*","comment.*","script.*","context.*","dump.*","eval.*","xref.*","function.*","assembler.*","bookmark.*","patch.*"]},"logging":{"enabled":true,"level":"info","file":"plugin.log","max_file_size_mb":10,"console_output":true},"timeout":{"request_timeout_ms":30000,"step_timeout_ms":10000,"memory_read_timeout_ms":5000},"features":{"enable_notifications":true,"enable_heartbeat":true,"heartbeat_interval_seconds":30,"enable_batch_requests":true,"auto_start_mcp_on_plugin_load":false}}'          
-          echo "$mcpConfig" | jq . > "$plugins_x64/x64dbg-mcp/config.json"  -Encoding utf8NoBom       
-          echo "$mcpConfig" | jq . > "$plugins_x32/x64dbg-mcp/config.json"  -Encoding utf8NoBom
-          
+          $mcpConfig | jq '.' | Set-Content "$plugins_x64\x64dbg-mcp\config.json" -Encoding utf8NoBOM
+          $mcpConfig | jq '.' | Set-Content "$plugins_x32\x64dbg-mcp\config.json" -Encoding utf8NoBOM
           $iniBlock = "[XAutomate]`r`nBindAddress=0.0.0.0`r`nMode=remote`r`nPubSubPort=69BA`r`nReqRepPort=69BB`r`n"          
           $iniBlock | Out-File -FilePath "$dl\x64dbg\release\x64\x64dbg.ini" -Append -Encoding UTF8          
           $iniBlock | Out-File -FilePath "$dl\x64dbg\release\x32\x32dbg.ini" -Append -Encoding UTF8          
