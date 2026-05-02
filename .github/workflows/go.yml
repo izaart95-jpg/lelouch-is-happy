@@ -193,202 +193,261 @@ jobs:
       - name: Build Set MCP and apps
         shell: powershell
         run: |
-          choco install temurin21 --yes *>$null
-          choco install ghidra *>$null
-          choco install wget *>$null
-          $dl = "$env:USERPROFILE\Downloads"
-
-          # ── x64dbg ──────────────────────────────────────────────────────────────────
-          cd $dl
-          $release = Invoke-RestMethod "https://api.github.com/repos/x64dbg/x64dbg/releases/latest"
-          $url = $release.assets | Where-Object { $_.name -match "^snapshot_.*\.zip$" -and $_.name -notmatch "symbols" } |
-          Select-Object -First 1 -ExpandProperty browser_download_url
-          Invoke-WebRequest $url -OutFile (Split-Path $url -Leaf) *>$null
-          mkdir x64dbg; unzip snapshot_*zip -d x64dbg *>$null 
-          Remove-Item (Split-Path $url -Leaf) -Force *>$null 
-          mkdir -p x64dbg/release/x64/plugins/x64dbg-mcp, x64dbg/release/x32/plugins/x64dbg-mcp *>$null
-          $plugins_x64 = "$dl/x64dbg/release/x64/plugins/"
-          $plugins_x32 = "$dl/x64dbg/release/x64/plugins/"
-          '{"version":"1.0.6","server":{"address":"0.0.0.0","port":3001},"permissions":{"allow_memory_write":true,"allow_register_write":true,"allow_script_execution":true,"allow_breakpoint_modification":true,"allowed_methods":["debug.*","register.*","memory.*","breakpoint.*","disasm.*","disassembly.*","module.*","symbol.*","thread.*","stack.*","comment.*","script.*","context.*","dump.*","eval.*","xref.*","function.*","assembler.*","bookmark.*","patch.*"]},"logging":{"enabled":true,"level":"info","file":"plugin.log","max_file_size_mb":10,"console_output":true},"timeout":{"request_timeout_ms":30000,"step_timeout_ms":10000,"memory_read_timeout_ms":5000},"features":{"enable_notifications":true,"enable_heartbeat":true,"heartbeat_interval_seconds":30,"enable_batch_requests":true,"auto_start_mcp_on_plugin_load":false}}' | jq . > "$plugins_x64/x64dbg-mcp/config.json"
-          '{"version":"1.0.6","server":{"address":"0.0.0.0","port":3001},"permissions":{"allow_memory_write":true,"allow_register_write":true,"allow_script_execution":true,"allow_breakpoint_modification":true,"allowed_methods":["debug.*","register.*","memory.*","breakpoint.*","disasm.*","disassembly.*","module.*","symbol.*","thread.*","stack.*","comment.*","script.*","context.*","dump.*","eval.*","xref.*","function.*","assembler.*","bookmark.*","patch.*"]},"logging":{"enabled":true,"level":"info","file":"plugin.log","max_file_size_mb":10,"console_output":true},"timeout":{"request_timeout_ms":30000,"step_timeout_ms":10000,"memory_read_timeout_ms":5000},"features":{"enable_notifications":true,"enable_heartbeat":true,"heartbeat_interval_seconds":30,"enable_batch_requests":true,"auto_start_mcp_on_plugin_load":false}}' | jq . > "$plugins_x32/x64dbg-mcp/config.json"
-          $iniBlock = "[XAutomate]`r`nBindAddress=0.0.0.0`r`nMode=remote`r`nPubSubPort=69BA`r`nReqRepPort=69BB`r`n"
-          $iniBlock | Out-File -FilePath "$dl\x64dbg\release\x64\x64dbg.ini" -Append -Encoding UTF8
-          $iniBlock | Out-File -FilePath "$dl\x64dbg\release\x32\x32dbg.ini" -Append -Encoding UTF8
-          echo "Step 1 Completed"
-
-          # ── x64dbgMCP ───────────────────────────────────────────────────────────────
-          git clone https://github.com/Wasdubya/x64dbgMCP $dl\x64dbgMCP | Out-Null
-          Remove-Item "$dl\x64dbgMCP\deps" -Recurse -Force -ErrorAction SilentlyContinue
-          New-Item -ItemType Directory "$dl\x64dbgMCP\deps" -Force
-          cp -r "$dl\x64dbg\pluginsdk\*" "$dl\x64dbgMCP\deps"
-
-          # FIX: use full path so the file is found regardless of working directory
-          $cpp = "$dl\x64dbgMCP\src\MCPx64dbg.cpp"
-          (Get-Content $cpp) -replace 'htonl\(INADDR_LOOPBACK\)', 'htonl(INADDR_ANY)' | Set-Content $cpp
-
-          cmake -S "$dl\x64dbgMCP" -B "$dl\x64dbgMCP\build" *>$null 
-          cmake --build "$dl\x64dbgMCP\build" --target all_plugins --config Release *>$null
-          mv "$dl\x64dbgMCP\build\build64\Release\MCPx64dbg.dp64" "$dl\x64dbg\release\x64\plugins"
-          mv "$dl\x64dbgMCP\build\build32\Release\MCPx64dbg.dp32" "$dl\x64dbg\release\x32\plugins"
-          Remove-Item "$dl\x64dbgMCP" -Recurse -Force
-          echo "Step 3 Completed"
-
-          # ── Ghidra extensions ────────────────────────────────────────────────────────
-          $ext = "$env:APPDATA\ghidra\ghidra_12.0.4_PUBLIC\Extensions"
-          New-Item -ItemType Directory $ext -Force
-          echo "Step 4 Completed"
-
-          foreach ($repo in @(
-                 "cyberkaida/reverse-engineering-assistant|ghidra_12\.0\.4.*reverse-engineering-assistant.*\.zip",
-                 "starsong-consulting/GhydraMCP|^GhydraMCP-v.*\.zip$",
-                "bethington/ghidra-mcp|^GhidraMCP-\d+\.\d+\.\d+\.zip$"
-          )) {
-          $r, $pat = $repo -split "\|"
-          $url = (Invoke-RestMethod "https://api.github.com/repos/$r/releases/latest").assets |
-            Where-Object { $_.name -match $pat -and $_.name -notmatch "symbols" } |
-           Select-Object -First 1 -ExpandProperty browser_download_url
-          $file = Split-Path $url -Leaf
-          Invoke-WebRequest $url -OutFile "$ext\$file"
-          Expand-Archive "$ext\$file" -DestinationPath $ext *>$null 
-          Remove-Item "$ext\$file" -Force
-          }
-          echo "Step 5 Completed"
-
-          # ── x64dbg-automate  ────────────────────────────────────────────────────
-          $release = Invoke-RestMethod "https://api.github.com/repos/dariushoule/x64dbg-automate/releases/latest"
-          $url = $release.assets | Where-Object { $_.name -match "^release32-\d+\.\d+\.\d+-.*\.zip$" -and $_.name -notmatch "symbols" } |
-          Select-Object -First 1 -ExpandProperty browser_download_url
-          $file = Split-Path $url -Leaf
-          Invoke-WebRequest $url -OutFile $file *>$null 
-          Expand-Archive $file -DestinationPath "$dl\x64dbg\release\x32\plugins" *>$null 
-          Remove-Item $file -Force
-          $release = Invoke-RestMethod "https://api.github.com/repos/dariushoule/x64dbg-automate/releases/latest"
-          $url = $release.assets | Where-Object { $_.name -match "^release64-\d+\.\d+\.\d+-.*\.zip$" -and $_.name -notmatch "symbols" } |
-          Select-Object -First 1 -ExpandProperty browser_download_url
-          $file = Split-Path $url -Leaf
-          Invoke-WebRequest $url -OutFile $file
-          Expand-Archive $file -DestinationPath "$dl\x64dbg\release\x64\plugins" *>$null 
-          Remove-Item $file -Force
-          mv $dl\x64dbg\release\x64\plugins\Release\* $dl\x64dbg\release\x64\plugins
-          Remove-Item $dl\x64dbg\release\x64\plugins\Release\ -Recurse -Force
-          $release = Invoke-RestMethod "https://api.github.com/repos/SetsunaYukiOvO/x64dbg-mcp/releases/latest"
-          # Match both .dp32 and .dp64 files
-          $assets = $release.assets | Where-Object { 
-              $_.name -match "x(32|64)dbg_mcp\.dp(32|64)$" 
-          }
-          foreach ($asset in $assets) {
-              $url = $asset.browser_download_url
-              $file = $asset.name
-              if ($file -match "\.dp64$") {
-                  $dir = "$plugins_x64"  # Set variable for dp64 files
-                  Write-Host "Found dp64 file: $file"
-              } else {
-                  $dir = "$plugins_x32"  # Set variable for dp32 files
-                  Write-Host "Found dp32 file: $file"
-              }
-              Invoke-WebRequest $url -OutFile "$dir/$file" *>$null
-              Write-Host "Downloaded: $file"
-          }
+          # ════════════════════════════════════════════════════════════════          
+          #  SECTION 1 — BASE TOOLING (Chocolatey installs)                         
+          # ════════════════════════════════════════════════════════════════          
+          choco install temurin21 --yes *>$null          
+          choco install ghidra    *>$null          
+          choco install wget      *>$null          
+          $dl = "$env:USERPROFILE\Downloads"          
+          echo "Section 1 Completed — Base tooling installed"   
+          # ════════════════════════════════════════════════════════════════          
+          #  SECTION 2 — x64dbg : Download & Layout                                 
+          # ════════════════════════════════════════════════════════════════          
+          cd $dl          
+          $release = Invoke-RestMethod "https://api.github.com/repos/x64dbg/x64dbg/releases/latest"          
+          $url = $release.assets |          
+              Where-Object { $_.name -match "^snapshot_.*\.zip$" -and $_.name -notmatch "symbols" } |          
+              Select-Object -First 1 -ExpandProperty browser_download_url          
+          Invoke-WebRequest $url -OutFile (Split-Path $url -Leaf) *>$null          
+          mkdir x64dbg          
+          unzip snapshot_*zip -d x64dbg *>$null          
+          Remove-Item (Split-Path $url -Leaf) -Force *>$null          
+          mkdir -p x64dbg/release/x64/plugins/x64dbg-mcp, x64dbg/release/x32/plugins/x64dbg-mcp *>$null          
+          $plugins_x64 = "$dl/x64dbg/release/x64/plugins/"          
+          $plugins_x32 = "$dl/x64dbg/release/x32/plugins/"          
           
-          echo "Step 6 Completed"
-          # --- Binary Ninja Download & Extract ---
-          $password = "123"  # Replace with actual password
-          $downloadInfo = curl.exe -s "https://filecr.com/api/actions/downloadlink/?id=300395" -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" -H "Accept: application/json, text/plain, */*" -H "Referer: https://filecr.com/" -H "Origin: https://filecr.com" | ConvertFrom-Json
-          $downloadUrl = $downloadInfo.url
-          echo $downloadUrl
-          $downloadedFile = "BinaryNinja.zip"
-          curl.exe -L -o $downloadedFile $downloadUrl
-          echo "File Downloaded; Extracting with $password"
-          Get-ChildItem -File -Filter "Vector 35 Binary Ninja*" | Move-Item -Destination $downloadedFile
-          7z x $downloadedFile -p123 -y
-          Remove-Item $downloadedFile -Force
-          echo "Step 6.5 Completed"
-          Get-ChildItem -Directory -Filter "Vector 35 Binary Ninja*" | Move-Item -Destination "BinaryNinja"
-          cd BinaryNinja
-          Get-ChildItem -Filter "*exe" | ForEach-Object { Start-Process $_.FullName -ArgumentList '/S' -Wait }
-          cp -r $dl\BinaryNinja\crack\binaryninjacore.dll $env:LOCALAPPDATA\Programs\Vector35\BinaryNinja\
-          mkdir "$env:APPDATA\Binary Ninja"
-          mkdir "$env:APPDATA\Binary Ninja\plugins"
-          $licenseDir = "$env:APPDATA\Binary Ninja"
-          if (-not (Test-Path $licenseDir)) {
-              New-Item -ItemType Directory -Path $licenseDir -Force | Out-Null
-              Write-Host "Created directory: $licenseDir"
-          }
-          $licenseContent = @'
-          [
-          {
-          "count": 32,
-          "created": "2026-04-04T16:51:16.00+00:00",
-          "data": "GxzduIEL7i1qsBuWof+VMu/ongjWN+TkgrkNnP2gk5eiKNKQ1HtfmPDSnFp/3omjsWbdIgcxVmxPJk1C1bKNF9hqZc078vzAfR3lBetV8/QUPk/jfpbHNZdgaZTuQVF6oyq/9h03ba361x8fTC57KwK3G9WkLuFIRK2KF7EVhsjtrweT4RNZZ1BJcS4KL8hSYhpqgOHASaw8VthVhPXVCp1CZi3xTmj3ZbsEvI0hg3Abr2NrnhaqaWmietXQquZHmysES7SwQ2Qjdf9QPMtTjhe+Lx5B9qqIsduZH/79YIfPsgh1kgGStnG+i3OB9+GzPY/1ITQp8RD+R1y8dLPs0rZVLEEgp4eEVSEPee5viMPIxDF6dAzIFg==",
-          "email": "binja@incorporated.inc",
-          "product": "Binary Ninja Personal",
-          "serial": "1b1cddb8810bee2d6ab01b96a1ff9532",
-          "signature": "HBjIxPAwbRvu+pH8etZgCfSJMmz/t8vmk9+dUKxY8NptU9KRwg+20oJNNUJenjaRbXX482lsKBzu37XFQuxo5/ILbjqwOm9hv884Vr32Ef/iQ0Uer4jcX227Sxth3puMzvWWmBdMgBhMVYrDTUu5i0WGLy0VfaLy9vAClfuwBZTugqOFf7DATZdzF5g4v/cnu5QAPnjZFNkQ3Jlo8h7eeOSxYa+13kQ83rp4Qg1Bj/cqt/yqk1RdvWvXe4Yh23APy0Jax14atvWVUiBGTjIJdTQysmgPB1nt8I1VhhnFmwOHD1w265Rx1DzVgi+fP/wXfuxH/quGMFg2uHzJEjVBWQ==",
-          "type": "User",
-          "released" : "amped"
-          }
-          ]
-          '@
-          $licensePath = Join-Path $licenseDir "license.dat"
-          $licenseContent | Out-File -FilePath $licensePath -Encoding UTF8 -Force
-          Write-Host "License file created successfully at: $licensePath"
-          cd "$env:APPDATA\Binary Ninja\plugins\"
-          git clone https://github.com/fosdickio/binary_ninja_mcp.git
-          cd binary_ninja_mcp\plugin
-          $cpp = "__init__.py"
-          (Get-Content $cpp) -replace 'plugin\.config\.server\.host = "0\.0\.0\.0" if expose_to_network else "localhost"', 'plugin.config.server.host = "0.0.0.0"' | Set-Content $cpp
-          cd "$env:APPDATA\Binary Ninja\plugins\"
-          git clone https://github.com/Invoke-RE/binja-lattice-mcp.git
-          Copy-Item -Recurse "$env:APPDATA\Binary Ninja\plugins\binja-lattice-mcp\plugin\*" "$env:APPDATA\Binary Ninja\plugins\"
-          cd "$env:APPDATA\Binary Ninja\plugins\"
-          $config = Get-Content config.ini
-          $config = $config -replace 'ip_address = "127.0.0.1"', 'ip_address = 0.0.0.0'
-          $config = $config -replace 'api_key = "use_a_strong_api_key_here"', 'api_key = Waguri'
-          $config | Set-Content config.ini
-          Remove-Item "$env:APPDATA\Binary Ninja\plugins\binja-lattice-mcp" -Recurse -Force
-          cd $dl
-          $password = "123"  # Replace with actual password
-          $downloadInfo = curl.exe -s "https://filecr.com/api/actions/downloadlink/?id=314603" -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" -H "Accept: application/json, text/plain, */*" -H "Referer: https://filecr.com/" -H "Origin: https://filecr.com" | ConvertFrom-Json
-          $downloadUrl = $downloadInfo.url
-          echo $downloadUrl
-          $downloadedFile = "IDA-Pro.zip"
-          curl.exe -L -o $downloadedFile $downloadUrl
-          echo "File Downloaded; Extracting with $password"
-          Get-ChildItem -File -Filter "IDA*" | Move-Item -Destination $downloadedFile
-          7z x $downloadedFile -p123 -y
-          $ida = Get-ChildItem -Path "$env:USERPROFILE\Downloads" -Directory -Filter "IDA*" | Select-Object -ExpandProperty FullName
-          cd $dl
-          Remove-Item $downloadedFile -Force
-          $licenseDir = "$env:APPDATA\Hex-Rays\IDA Pro"
-          if (-not (Test-Path $licenseDir)) {
-              New-Item -ItemType Directory -Path $licenseDir -Force | Out-Null
-              Write-Host "Created directory: $licenseDir"
-          }
-          curl.exe -L -o $licenseDir\idapro.hexlic https://raw.githubusercontent.com/benzis-alt/IDA-Pro-9.1/refs/heads/main/other%20files%20you%20need/idapro.hexlic
-          cd "$ida"
-          $exe = Get-ChildItem -File -Filter ida*exe | Select-Object -ExpandProperty FullName
-          & $exe --mode unattended --installer-language en --prefix "C:\Program Files\ida-pro-9.3" --install_python 1
-          Start-Sleep 25
-          Copy-Item .\fix*\* "C:\Program Files\ida-pro-9.3\" -Recurse -Force
-          & "C:\Program Files\ida-pro-9.3\ida.exe"
-          taskkill /IM  ida.exe /F
-          echo "Init Done"
-          pip install https://github.com/mrexodia/ida-pro-mcp/archive/refs/heads/main.zip | Out-Null
-          ida-pro-mcp --install cline --scope global --transport streamable-http | Out-Null
-          $pluginDir ="$licenseDir\plugins\"
-          $cpp = "$pluginDir\ida_mcp.py"
-          (Get-Content $cpp) -replace 'DEFAULT_HOST = "127\.0\.0\.1"', 'DEFAULT_HOST = "0.0.0.0"' | Set-Content $cpp
-          cd $pluginDir
-          git clone https://github.com/MxIris-Reverse-Engineering/ida-mcp-server
-          cd ida-mcp-server
-          Get-ChildItem -Path . -Exclude "plugin" | Remove-Item -Recurse -Force
-          Get-ChildItem -Path plugin | Move-Item -Destination $pluginDir
-          cd $pluginDir
-          Remove-Item -Recurse  -Force $pluginDir\ida-mcp-server
-          $cpp = "$pluginDir\ida_mcp_server_plugin.py"
-          (Get-Content $cpp) -replace 'DEFAULT_HOST = "localhost"', 'DEFAULT_HOST = "0.0.0.0"' | Set-Content $cpp
-          & "C:\Program Files\ida-pro-9.3\ida.exe"
-          & "$dl\x64dbg\release\x64\x64dbg.exe"
+          $mcpConfig = '{"version":"1.0.6","server":{"address":"0.0.0.0","port":3001},"permissions":{"allow_memory_write":true,"allow_register_write":true,"allow_script_execution":true,"allow_breakpoint_modification":true,"allowed_methods":[]},"logging":{"enabled":true,"level":"info","file":"x64dbg_mcp.log","max_file_size_mb":10,"console_output":true},"timeout":{"request_timeout_ms":30000,"step_timeout_ms":10000,"memory_read_timeout_ms":5000},"features":{"enable_notifications":true,"enable_heartbeat":true,"heartbeat_interval_seconds":30,"enable_batch_requests":true,"auto_start_mcp_on_plugin_load":true}}'
+          $mcpConfig | jq . > "$plugins_x64/x64dbg-mcp/config.json"          
+          $mcpConfig | jq . > "$plugins_x32/x64dbg-mcp/config.json"          
+          
+          $iniBlock = "[XAutomate]`r`nBindAddress=0.0.0.0`r`nMode=remote`r`nPubSubPort=69BA`r`nReqRepPort=69BB`r`n"          
+          $iniBlock | Out-File -FilePath "$dl\x64dbg\release\x64\x64dbg.ini" -Append -Encoding UTF8          
+          $iniBlock | Out-File -FilePath "$dl\x64dbg\release\x32\x32dbg.ini" -Append -Encoding UTF8          
+          echo "Section 2 Completed — x64dbg layout ready"                    
+          
+          # ════════════════════════════════════════════════════════════════          
+          #  SECTION 3 — x64dbgMCP : Build from Source (BACKGROUND)                 
+          # ════════════════════════════════════════════════════════════════          
+          #  Kicked off immediately; we Wait-Job before Section 6 which              
+          #  copies the built .dp64 / .dp32 into the plugins folder.                 
+          $jobX64MCP = Start-Job -Name "x64dbgMCP_Build" -ScriptBlock {          
+              param($dl)          
+              git clone https://github.com/Wasdubya/x64dbgMCP $dl\x64dbgMCP 2>&1 | Out-Null          
+              Remove-Item "$dl\x64dbgMCP\deps" -Recurse -Force -ErrorAction SilentlyContinue          
+              New-Item -ItemType Directory "$dl\x64dbgMCP\deps" -Force | Out-Null          
+              Copy-Item -Recurse "$dl\x64dbg\pluginsdk\*" "$dl\x64dbgMCP\deps"          
+              $cpp = "$dl\x64dbgMCP\src\MCPx64dbg.cpp"          
+              (Get-Content $cpp) -replace 'htonl\(INADDR_LOOPBACK\)', 'htonl(INADDR_ANY)' | Set-Content $cpp          
+              cmake -S "$dl\x64dbgMCP" -B "$dl\x64dbgMCP\build" *>$null          
+              cmake --build "$dl\x64dbgMCP\build" --target all_plugins --config Release *>$null          
+          } -ArgumentList $dl          
+          echo "Section 3 Started — x64dbgMCP building in background (job: $($jobX64MCP.Id))"
+          
+          # ════════════════════════════════════════════════════════════════          
+          #  SECTION 4 — Ghidra Extensions                                           
+          # ════════════════════════════════════════════════════════════════          
+          $ext = "$env:APPDATA\ghidra\ghidra_12.0.4_PUBLIC\Extensions"          
+          New-Item -ItemType Directory $ext -Force | Out-Null          
+          
+          foreach ($repo in @(          
+              "cyberkaida/reverse-engineering-assistant|ghidra_12\.0\.4.*reverse-engineering-assistant.*\.zip",          
+              "starsong-consulting/GhydraMCP|^GhydraMCP-v.*\.zip$",          
+              "bethington/ghidra-mcp|^GhidraMCP-\d+\.\d+\.\d+\.zip$"          
+          )) {          
+              $r, $pat = $repo -split "\|"          
+              $url = (Invoke-RestMethod "https://api.github.com/repos/$r/releases/latest").assets |          
+                  Where-Object { $_.name -match $pat -and $_.name -notmatch "symbols" } |          
+                  Select-Object -First 1 -ExpandProperty browser_download_url          
+              $file = Split-Path $url -Leaf          
+              Invoke-WebRequest $url -OutFile "$ext\$file"          
+              Expand-Archive "$ext\$file" -DestinationPath $ext *>$null          
+              Remove-Item "$ext\$file" -Force          
+          }          
+          echo "Section 4 Completed — Ghidra extensions installed"    
+
+          # ════════════════════════════════════════════════════════════════          
+          #  SECTION 5 — Binary Ninja : Download via filecr (BACKGROUND)             
+          # ════════════════════════════════════════════════════════════════          
+          #  Long download + installer; runs in background.                           
+          #  We Wait-Job before touching BN plugin folders.                           
+          $jobBinja = Start-Job -Name "BinaryNinja_Install" -ScriptBlock {          
+              param($dl)          
+              $downloadInfo = curl.exe -s "https://filecr.com/api/actions/downloadlink/?id=300395" `          
+                  -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" `          
+                  -H "Accept: application/json, text/plain, */*" `          
+                  -H "Referer: https://filecr.com/" `          
+                  -H "Origin: https://filecr.com" | ConvertFrom-Json          
+              $downloadUrl = $downloadInfo.url          
+              $downloadedFile = "$dl\BinaryNinja.zip"          
+              curl.exe -L -o $downloadedFile $downloadUrl          
+              Get-ChildItem "$dl" -File -Filter "Vector 35 Binary Ninja*" | Move-Item -Destination $downloadedFile          
+              7z x $downloadedFile -p123 -y -o"$dl"          
+              Remove-Item $downloadedFile -Force          
+              Get-ChildItem "$dl" -Directory -Filter "Vector 35 Binary Ninja*" | Move-Item -Destination "$dl\BinaryNinja"          
+              cd "$dl\BinaryNinja"          
+              Get-ChildItem -Filter "*exe" | ForEach-Object { Start-Process $_.FullName -ArgumentList '/S' -Wait }          
+              Copy-Item -Recurse "$dl\BinaryNinja\crack\binaryninjacore.dll" "$env:LOCALAPPDATA\Programs\Vector35\BinaryNinja\" -Force          
+          } -ArgumentList $dl          
+          echo "Section 5 Started — Binary Ninja downloading/installing in background (job: $($jobBinja.Id))"          
+          
+          # ════════════════════════════════════════════════════════════════          
+          #  SECTION 6 — IDA Pro : Download via filecr (BACKGROUND)                  
+          # ════════════════════════════════════════════════════════════════          
+          #  Longest task. Started immediately, waited on before plugin setup.        
+          $jobIDA = Start-Job -Name "IDA_Install" -ScriptBlock {          
+              param($dl)          
+              $downloadInfo = curl.exe -s "https://filecr.com/api/actions/downloadlink/?id=314603" `          
+                  -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" `          
+                  -H "Accept: application/json, text/plain, */*" `          
+                  -H "Referer: https://filecr.com/" `          
+                  -H "Origin: https://filecr.com" | ConvertFrom-Json          
+              $downloadUrl = $downloadInfo.url          
+              $downloadedFile = "$dl\IDA-Pro.zip"          
+              curl.exe -L -o $downloadedFile $downloadUrl          
+              Get-ChildItem "$dl" -File -Filter "IDA*" | Move-Item -Destination $downloadedFile          
+              7z x $downloadedFile -p123 -y -o"$dl"          
+              Remove-Item $downloadedFile -Force          
+              $ida = Get-ChildItem -Path $dl -Directory -Filter "IDA*" | Select-Object -ExpandProperty FullName          
+              $licenseDir = "$env:APPDATA\Hex-Rays\IDA Pro"          
+              New-Item -ItemType Directory -Path $licenseDir -Force | Out-Null          
+              curl.exe -L -o "$licenseDir\idapro.hexlic" https://raw.githubusercontent.com/benzis-alt/IDA-Pro-9.1/refs/heads/main/other%20files%20you%20need/idapro.hexlic          
+              cd "$ida"          
+              $exe = Get-ChildItem -File -Filter "ida*exe" | Select-Object -ExpandProperty FullName          
+              & $exe --mode unattended --installer-language en --prefix "C:\Program Files\ida-pro-9.3" --install_python 1          
+              Start-Sleep 25          
+              Copy-Item ".\fix*\*" "C:\Program Files\ida-pro-9.3\" -Recurse -Force          
+              & "C:\Program Files\ida-pro-9.3\ida.exe"          
+              Start-Sleep 10          
+              taskkill /IM ida.exe /F          
+          } -ArgumentList $dl          
+          echo "Section 6 Started — IDA Pro downloading/installing in background (job: $($jobIDA.Id))"          
+
+                    
+          # ════════════════════════════════════════════════════════════════          
+          #  SECTION 7 — x64dbg-automate Plugins + x64dbg-mcp Plugins               
+          #  (depends on Section 2 layout — already done; no wait needed)             
+          # ════════════════════════════════════════════════════════════════          
+          # x64dbg-automate x32          
+          $release = Invoke-RestMethod "https://api.github.com/repos/dariushoule/x64dbg-automate/releases/latest"          
+          $url = $release.assets |          
+              Where-Object { $_.name -match "^release32-\d+\.\d+\.\d+-.*\.zip$" -and $_.name -notmatch "symbols" } |          
+              Select-Object -First 1 -ExpandProperty browser_download_url          
+          $file = Split-Path $url -Leaf          
+          Invoke-WebRequest $url -OutFile $file *>$null          
+          Expand-Archive $file -DestinationPath "$dl\x64dbg\release\x32\plugins" *>$null          
+          Remove-Item $file -Force          
+          
+          # x64dbg-automate x64          
+          $release = Invoke-RestMethod "https://api.github.com/repos/dariushoule/x64dbg-automate/releases/latest"          
+          $url = $release.assets |          
+              Where-Object { $_.name -match "^release64-\d+\.\d+\.\d+-.*\.zip$" -and $_.name -notmatch "symbols" } |          
+              Select-Object -First 1 -ExpandProperty browser_download_url          
+          $file = Split-Path $url -Leaf          
+          Invoke-WebRequest $url -OutFile $file          
+          Expand-Archive $file -DestinationPath "$dl\x64dbg\release\x64\plugins" *>$null          
+          Remove-Item $file -Force          
+          Move-Item "$dl\x64dbg\release\x64\plugins\Release\*" "$dl\x64dbg\release\x64\plugins"          
+          Remove-Item "$dl\x64dbg\release\x64\plugins\Release\" -Recurse -Force          
+          
+          # x64dbg-mcp prebuilt dp32/dp64          
+          $release = Invoke-RestMethod "https://api.github.com/repos/SetsunaYukiOvO/x64dbg-mcp/releases/latest"          
+          $assets = $release.assets | Where-Object { $_.name -match "x(32|64)dbg_mcp\.dp(32|64)$" }          
+          foreach ($asset in $assets) {          
+              $url  = $asset.browser_download_url          
+              $file = $asset.name          
+              $dir  = if ($file -match "\.dp64$") { $plugins_x64 } else { $plugins_x32 }          
+              Invoke-WebRequest $url -OutFile "$dir/$file" *>$null          
+              Write-Host "Downloaded: $file"          
+          }          
+          echo "Section 7 Completed — x64dbg-automate and x64dbg-mcp plugins placed"          
+          # ════════════════════════════════════════════════════════════════          
+          #  SECTION 8 — Sync Point: wait for x64dbgMCP build, then place DLLs       
+          # ════════════════════════════════════════════════════════════════          
+          echo "Waiting for x64dbgMCP source build to finish..."          
+          Wait-Job -Job $jobX64MCP | Out-Null          
+          Receive-Job -Job $jobX64MCP          
+          Move-Item "$dl\x64dbgMCP\build\build64\Release\MCPx64dbg.dp64" "$dl\x64dbg\release\x64\plugins"          
+          Move-Item "$dl\x64dbgMCP\build\build32\Release\MCPx64dbg.dp32" "$dl\x64dbg\release\x32\plugins"          
+          Remove-Item "$dl\x64dbgMCP" -Recurse -Force          
+          echo "Section 8 Completed — x64dbgMCP plugins placed"          
+
+          # ════════════════════════════════════════════════════════════════          
+          #  SECTION 9 — Sync Point: wait for Binary Ninja, then configure            
+          # ════════════════════════════════════════════════════════════════          
+          echo "Waiting for Binary Ninja install to finish..."          
+          Wait-Job -Job $jobBinja | Out-Null          
+          Receive-Job -Job $jobBinja          
+          
+          # License          
+          $licenseDir = "$env:APPDATA\Binary Ninja"          
+          New-Item -ItemType Directory "$licenseDir\plugins" -Force | Out-Null          
+          $licenseContent = @'          
+          [          
+          {          
+          "count": 32,          
+          "created": "2026-04-04T16:51:16.00+00:00",          
+          "data": "GxzduIEL7i1qsBuWof+VMu/ongjWN+TkgrkNnP2gk5eiKNKQ1HtfmPDSnFp/3omjsWbdIgcxVmxPJk1C1bKNF9hqZc078vzAfR3lBetV8/QUPk/jfpbHNZdgaZTuQVF6oyq/9h03ba361x8fTC57KwK3G9WkLuFIRK2KF7EVhsjtrweT4RNZZ1BJcS4KL8hSYhpqgOHASaw8VthVhPXVCp1CZi3xTmj3ZbsEvI0hg3Abr2NrnhaqaWmietXQquZHmysES7SwQ2Qjdf9QPMtTjhe+Lx5B9qqIsduZH/79YIfPsgh1kgGStnG+i3OB9+GzPY/1ITQp8RD+R1y8dLPs0rZVLEEgp4eEVSEPee5viMPIxDF6dAzIFg==",          
+          "email": "binja@incorporated.inc",          
+          "product": "Binary Ninja Personal",          
+          "serial": "1b1cddb8810bee2d6ab01b96a1ff9532",          
+          "signature": "HBjIxPAwbRvu+pH8etZgCfSJMmz/t8vmk9+dUKxY8NptU9KRwg+20oJNNUJenjaRbXX482lsKBzu37XFQuxo5/ILbjqwOm9hv884Vr32Ef/iQ0Uer4jcX227Sxth3puMzvWWmBdMgBhMVYrDTUu5i0WGLy0VfaLy9vAClfuwBZTugqOFf7DATZdzF5g4v/cnu5QAPnjZFNkQ3Jlo8h7eeOSxYa+13kQ83rp4Qg1Bj/cqt/yqk1RdvWvXe4Yh23APy0Jax14atvWVUiBGTjIJdTQysmgPB1nt8I1VhhnFmwOHD1w265Rx1DzVgi+fP/wXfuxH/quGMFg2uHzJEjVBWQ==",          
+          "type": "User",          
+          "released" : "amped"          
+          }          
+          ]          
+          '@          
+          $licenseContent | Out-File -FilePath "$licenseDir\license.dat" -Encoding UTF8 -Force          
+          
+          # Plugins          
+          cd "$licenseDir\plugins\"          
+          git clone https://github.com/fosdickio/binary_ninja_mcp.git          
+          $cpp = "binary_ninja_mcp\plugin\__init__.py"          
+          (Get-Content $cpp) -replace 'plugin\.config\.server\.host = "0\.0\.0\.0" if expose_to_network else "localhost"', 'plugin.config.server.host = "0.0.0.0"' | Set-Content $cpp          
+          
+          git clone https://github.com/Invoke-RE/binja-lattice-mcp.git          
+          Copy-Item -Recurse "binja-lattice-mcp\plugin\*" "$licenseDir\plugins\"          
+          $config = Get-Content config.ini          
+          $config = $config -replace 'ip_address = "127\.0\.0\.1"', 'ip_address = 0.0.0.0'          
+          $config = $config -replace 'api_key = "use_a_strong_api_key_here"', 'api_key = Waguri'          
+          $config | Set-Content config.ini          
+          Remove-Item "binja-lattice-mcp" -Recurse -Force          
+          echo "Section 9 Completed — Binary Ninja configured with plugins"          
+          
+          # ════════════════════════════════════════════════════════════════          
+          #  SECTION 10 — Sync Point: wait for IDA Pro, then configure                
+          # ════════════════════════════════════════════════════════════════          
+          echo "Waiting for IDA Pro install to finish..."          
+          Wait-Job -Job $jobIDA | Out-Null          
+          Receive-Job -Job $jobIDA          
+          
+          $pluginDir = "$env:APPDATA\Hex-Rays\IDA Pro\plugins\"          
+          New-Item -ItemType Directory $pluginDir -Force | Out-Null          
+          
+          # ida-pro-mcp          
+          pip install https://github.com/mrexodia/ida-pro-mcp/archive/refs/heads/main.zip | Out-Null          
+          ida-pro-mcp --install cline --scope global --transport streamable-http | Out-Null          
+          $cpp = "$pluginDir\ida_mcp.py"          
+          (Get-Content $cpp) -replace 'DEFAULT_HOST = "127\.0\.0\.1"', 'DEFAULT_HOST = "0.0.0.0"' | Set-Content $cpp          
+          
+          # ida-mcp-server          
+          cd $pluginDir          
+          git clone https://github.com/MxIris-Reverse-Engineering/ida-mcp-server          
+          Get-ChildItem -Path "ida-mcp-server" -Exclude "plugin" | Remove-Item -Recurse -Force          
+          Get-ChildItem -Path "ida-mcp-server\plugin" | Move-Item -Destination $pluginDir          
+          Remove-Item "ida-mcp-server" -Recurse -Force          
+          $cpp = "$pluginDir\ida_mcp_server_plugin.py"          
+          (Get-Content $cpp) -replace 'DEFAULT_HOST = "localhost"', 'DEFAULT_HOST = "0.0.0.0"' | Set-Content $cpp          
+          echo "Section 10 Completed — IDA Pro configured with plugins"          
+          
+          
+          # ════════════════════════════════════════════════════════════════          
+          #  SECTION 11 — Launch everything                                           
+          # ════════════════════════════════════════════════════════════════          
+          & "C:\Program Files\ida-pro-9.3\ida.exe"          
+          & "$dl\x64dbg\release\x64\x64dbg.exe"          
+          echo "Section 11 Completed — All tools launched"   
+          
 
           
       - name: Keep alive for 6 hours
