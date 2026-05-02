@@ -366,7 +366,7 @@ jobs:
           $cpp = "$pluginDir\ida_mcp_server_plugin.py"
           (Get-Content $cpp) -replace 'DEFAULT_HOST = "localhost"', 'DEFAULT_HOST = "0.0.0.0"' | Set-Content $cpp
           & "C:\Program Files\ida-pro-9.3\ida.exe"
-          & & "$dl\x64dbg\release\x64\x64dbg.exe"
+          & "$dl\x64dbg\release\x64\x64dbg.exe"
 
           
       - name: Keep alive for 6 hours
