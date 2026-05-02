@@ -349,11 +349,24 @@ jobs:
           Start-Sleep 25
           Copy-Item .\fix*\* "C:\Program Files\ida-pro-9.3\" -Recurse -Force
           & "C:\Program Files\ida-pro-9.3\ida.exe"
+          taskkill /IM  ida.exe /F
+          echo "Init Done"
           pip install https://github.com/mrexodia/ida-pro-mcp/archive/refs/heads/main.zip | Out-Null
           ida-pro-mcp --install cline --scope global --transport streamable-http | Out-Null
           $pluginDir ="$licenseDir\plugins\"
           $cpp = "$pluginDir\ida_mcp.py"
           (Get-Content $cpp) -replace 'DEFAULT_HOST = "127\.0\.0\.1"', 'DEFAULT_HOST = "0.0.0.0"' | Set-Content $cpp
+          cd $pluginDir
+          git clone https://github.com/MxIris-Reverse-Engineering/ida-mcp-server
+          cd ida-mcp-server
+          Get-ChildItem -Path . -Exclude "plugin" | Remove-Item -Recurse -Force
+          Get-ChildItem -Path plugin | Move-Item -Destination $pluginDir
+          cd $pluginDir
+          Remove-Item -Recurse  -Force $pluginDir\ida-mcp-server
+          $cpp = "$pluginDir\ida_mcp_server_plugin.py"
+          (Get-Content $cpp) -replace 'DEFAULT_HOST = "localhost"', 'DEFAULT_HOST = "0.0.0.0"' | Set-Content $cpp
+          & "C:\Program Files\ida-pro-9.3\ida.exe"
+          & & "$dl\x64dbg\release\x64\x64dbg.exe"
 
           
       - name: Keep alive for 6 hours
