@@ -351,7 +351,9 @@ jobs:
           & "C:\Program Files\ida-pro-9.3\ida.exe"
           pip install https://github.com/mrexodia/ida-pro-mcp/archive/refs/heads/main.zip | Out-Null
           ida-pro-mcp --install cline --scope global --transport streamable-http | Out-Null
-          
+          $pluginDir ="$licenseDir\plugins\"
+          $cpp = "$pluginDir\ida_mcp.py"
+          (Get-Content $cpp) -replace 'DEFAULT_HOST = "127\.0\.0\.1"', 'DEFAULT_HOST = "0.0.0.0"' | Set-Content $cpp
 
           
       - name: Keep alive for 6 hours
