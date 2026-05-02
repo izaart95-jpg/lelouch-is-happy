@@ -25,7 +25,7 @@ jobs:
         run: |
           Write-Host "Installing Google API dependencies..."
           py -3.11 -m pip install uv
-          py -3.11 -m uv install requests google-api-python-client google-auth google-auth-oauthlib 
+          py -3.11 -m uv pip install requests google-api-python-client google-auth google-auth-oauthlib 
           Write-Host "Dependencies installed"          
           
       - name: Download and extract Project.zip
