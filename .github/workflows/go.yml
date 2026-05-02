@@ -192,17 +192,19 @@ jobs:
           
       - name: Build Set MCP and apps
         shell: powershell
-        run: |
+        run: |      
           # ════════════════════════════════════════════════════════════════          
-          #  SECTION 1 - BASE TOOLING (Chocolatey installs)                         
+          #  SECTION 1 — BASE TOOLING (Chocolatey installs)                         
           # ════════════════════════════════════════════════════════════════          
           choco install temurin21 --yes *>$null          
           choco install ghidra    *>$null          
           choco install wget      *>$null          
           $dl = "$env:USERPROFILE\Downloads"          
-          echo "Section 1 Completed - Base tooling installed"   
+          echo "Section 1 Completed — Base tooling installed"          
+          
+          
           # ════════════════════════════════════════════════════════════════          
-          #  SECTION 2 - x64dbg : Download & Layout                                 
+          #  SECTION 2 — x64dbg : Download & Layout                                 
           # ════════════════════════════════════════════════════════════════          
           cd $dl          
           $release = Invoke-RestMethod "https://api.github.com/repos/x64dbg/x64dbg/releases/latest"          
@@ -217,17 +219,18 @@ jobs:
           $plugins_x64 = "$dl/x64dbg/release/x64/plugins/"          
           $plugins_x32 = "$dl/x64dbg/release/x32/plugins/"          
           
-          $mcpConfig = '{"version":"1.0.6","server":{"address":"0.0.0.0","port":3001},"permissions":{"allow_memory_write":true,"allow_register_write":true,"allow_script_execution":true,"allow_breakpoint_modification":true,"allowed_methods":[]},"logging":{"enabled":true,"level":"info","file":"x64dbg_mcp.log","max_file_size_mb":10,"console_output":true},"timeout":{"request_timeout_ms":30000,"step_timeout_ms":10000,"memory_read_timeout_ms":5000},"features":{"enable_notifications":true,"enable_heartbeat":true,"heartbeat_interval_seconds":30,"enable_batch_requests":true,"auto_start_mcp_on_plugin_load":true}}'
+          $mcpConfig = '{"version":"1.0.6","server":{"address":"0.0.0.0","port":3001},"permissions":{"allow_memory_write":true,"allow_register_write":true,"allow_script_execution":true,"allow_breakpoint_modification":true,"allowed_methods":[]},"logging":{"enabled":true,"level":"info","file":"x64dbg_mcp.log","max_file_size_mb":10,"console_output":true},"timeout":{"request_timeout_ms":30000,"step_timeout_ms":10000,"memory_read_timeout_ms":5000},"features":{"enable_notifications":true,"enable_heartbeat":true,"heartbeat_interval_seconds":30,"enable_batch_requests":true,"auto_start_mcp_on_plugin_load":true}}'      
           $mcpConfig | jq . > "$plugins_x64/x64dbg-mcp/config.json"          
           $mcpConfig | jq . > "$plugins_x32/x64dbg-mcp/config.json"          
           
           $iniBlock = "[XAutomate]`r`nBindAddress=0.0.0.0`r`nMode=remote`r`nPubSubPort=69BA`r`nReqRepPort=69BB`r`n"          
           $iniBlock | Out-File -FilePath "$dl\x64dbg\release\x64\x64dbg.ini" -Append -Encoding UTF8          
           $iniBlock | Out-File -FilePath "$dl\x64dbg\release\x32\x32dbg.ini" -Append -Encoding UTF8          
-          echo "Section 2 Completed - x64dbg layout ready"                    
+          echo "Section 2 Completed — x64dbg layout ready"          
+          
           
           # ════════════════════════════════════════════════════════════════          
-          #  SECTION 3 - x64dbgMCP : Build from Source (BACKGROUND)                 
+          #  SECTION 3 — x64dbgMCP : Build from Source (BACKGROUND)                 
           # ════════════════════════════════════════════════════════════════          
           #  Kicked off immediately; we Wait-Job before Section 6 which              
           #  copies the built .dp64 / .dp32 into the plugins folder.                 
@@ -242,10 +245,11 @@ jobs:
               cmake -S "$dl\x64dbgMCP" -B "$dl\x64dbgMCP\build" *>$null          
               cmake --build "$dl\x64dbgMCP\build" --target all_plugins --config Release *>$null          
           } -ArgumentList $dl          
-          echo "Section 3 Started - x64dbgMCP building in background (job: $($jobX64MCP.Id))"
+          echo "Section 3 Started — x64dbgMCP building in background (job: $($jobX64MCP.Id))"          
+          
           
           # ════════════════════════════════════════════════════════════════          
-          #  SECTION 4 - Ghidra Extensions                                           
+          #  SECTION 4 — Ghidra Extensions                                           
           # ════════════════════════════════════════════════════════════════          
           $ext = "$env:APPDATA\ghidra\ghidra_12.0.4_PUBLIC\Extensions"          
           New-Item -ItemType Directory $ext -Force | Out-Null          
@@ -264,20 +268,18 @@ jobs:
               Expand-Archive "$ext\$file" -DestinationPath $ext *>$null          
               Remove-Item "$ext\$file" -Force          
           }          
-          echo "Section 4 Completed - Ghidra extensions installed"    
-
+          echo "Section 4 Completed — Ghidra extensions installed"          
+          
+          
           # ════════════════════════════════════════════════════════════════          
-          #  SECTION 5 - Binary Ninja : Download via filecr (BACKGROUND)             
+          #  SECTION 5 — Binary Ninja : Download via filecr (BACKGROUND)             
           # ════════════════════════════════════════════════════════════════          
           #  Long download + installer; runs in background.                           
           #  We Wait-Job before touching BN plugin folders.                           
           $jobBinja = Start-Job -Name "BinaryNinja_Install" -ScriptBlock {          
               param($dl)          
-              $downloadInfo = curl.exe -s "https://filecr.com/api/actions/downloadlink/?id=300395" `          
-                  -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" `          
-                  -H "Accept: application/json, text/plain, */*" `          
-                  -H "Referer: https://filecr.com/" `          
-                  -H "Origin: https://filecr.com" | ConvertFrom-Json          
+              $curlArgs = @("-s","https://filecr.com/api/actions/downloadlink/?id=300395","-H","User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36","-H","Accept: application/json, text/plain, */*","-H","Referer: https://filecr.com/","-H","Origin: https://filecr.com")          
+              $downloadInfo = curl.exe @curlArgs | ConvertFrom-Json          
               $downloadUrl = $downloadInfo.url          
               $downloadedFile = "$dl\BinaryNinja.zip"          
               curl.exe -L -o $downloadedFile $downloadUrl          
@@ -289,19 +291,17 @@ jobs:
               Get-ChildItem -Filter "*exe" | ForEach-Object { Start-Process $_.FullName -ArgumentList '/S' -Wait }          
               Copy-Item -Recurse "$dl\BinaryNinja\crack\binaryninjacore.dll" "$env:LOCALAPPDATA\Programs\Vector35\BinaryNinja\" -Force          
           } -ArgumentList $dl          
-          echo "Section 5 Started - Binary Ninja downloading/installing in background (job: $($jobBinja.Id))"          
+          echo "Section 5 Started — Binary Ninja downloading/installing in background (job: $($jobBinja.Id))"          
+          
           
           # ════════════════════════════════════════════════════════════════          
-          #  SECTION 6 - IDA Pro : Download via filecr (BACKGROUND)                  
+          #  SECTION 6 — IDA Pro : Download via filecr (BACKGROUND)                  
           # ════════════════════════════════════════════════════════════════          
           #  Longest task. Started immediately, waited on before plugin setup.        
           $jobIDA = Start-Job -Name "IDA_Install" -ScriptBlock {          
               param($dl)          
-              $downloadInfo = curl.exe -s "https://filecr.com/api/actions/downloadlink/?id=314603" `          
-                  -H "User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36" `          
-                  -H "Accept: application/json, text/plain, */*" `          
-                  -H "Referer: https://filecr.com/" `          
-                  -H "Origin: https://filecr.com" | ConvertFrom-Json          
+              $curlArgs = @("-s","https://filecr.com/api/actions/downloadlink/?id=314603","-H","User-Agent: Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36","-H","Accept: application/json, text/plain, */*","-H","Referer: https://filecr.com/","-H","Origin: https://filecr.com")          
+              $downloadInfo = curl.exe @curlArgs | ConvertFrom-Json          
               $downloadUrl = $downloadInfo.url          
               $downloadedFile = "$dl\IDA-Pro.zip"          
               curl.exe -L -o $downloadedFile $downloadUrl          
@@ -321,12 +321,12 @@ jobs:
               Start-Sleep 10          
               taskkill /IM ida.exe /F          
           } -ArgumentList $dl          
-          echo "Section 6 Started - IDA Pro downloading/installing in background (job: $($jobIDA.Id))"          
-
-                    
+          echo "Section 6 Started — IDA Pro downloading/installing in background (job: $($jobIDA.Id))"          
+          
+          
           # ════════════════════════════════════════════════════════════════          
-          #  SECTION 7 - x64dbg-automate Plugins + x64dbg-mcp Plugins               
-          #  (depends on Section 2 layout - already done; no wait needed)             
+          #  SECTION 7 — x64dbg-automate Plugins + x64dbg-mcp Plugins               
+          #  (depends on Section 2 layout — already done; no wait needed)             
           # ════════════════════════════════════════════════════════════════          
           # x64dbg-automate x32          
           $release = Invoke-RestMethod "https://api.github.com/repos/dariushoule/x64dbg-automate/releases/latest"          
@@ -360,9 +360,11 @@ jobs:
               Invoke-WebRequest $url -OutFile "$dir/$file" *>$null          
               Write-Host "Downloaded: $file"          
           }          
-          echo "Section 7 Completed - x64dbg-automate and x64dbg-mcp plugins placed"          
+          echo "Section 7 Completed — x64dbg-automate and x64dbg-mcp plugins placed"          
+          
+          
           # ════════════════════════════════════════════════════════════════          
-          #  SECTION 8 - Sync Point: wait for x64dbgMCP build, then place DLLs       
+          #  SECTION 8 — Sync Point: wait for x64dbgMCP build, then place DLLs       
           # ════════════════════════════════════════════════════════════════          
           echo "Waiting for x64dbgMCP source build to finish..."          
           Wait-Job -Job $jobX64MCP | Out-Null          
@@ -370,10 +372,11 @@ jobs:
           Move-Item "$dl\x64dbgMCP\build\build64\Release\MCPx64dbg.dp64" "$dl\x64dbg\release\x64\plugins"          
           Move-Item "$dl\x64dbgMCP\build\build32\Release\MCPx64dbg.dp32" "$dl\x64dbg\release\x32\plugins"          
           Remove-Item "$dl\x64dbgMCP" -Recurse -Force          
-          echo "Section 8 Completed - x64dbgMCP plugins placed"          
-
+          echo "Section 8 Completed — x64dbgMCP plugins placed"          
+          
+          
           # ════════════════════════════════════════════════════════════════          
-          #  SECTION 9 - Sync Point: wait for Binary Ninja, then configure            
+          #  SECTION 9 — Sync Point: wait for Binary Ninja, then configure            
           # ════════════════════════════════════════════════════════════════          
           echo "Waiting for Binary Ninja install to finish..."          
           Wait-Job -Job $jobBinja | Out-Null          
@@ -412,10 +415,11 @@ jobs:
           $config = $config -replace 'api_key = "use_a_strong_api_key_here"', 'api_key = Waguri'          
           $config | Set-Content config.ini          
           Remove-Item "binja-lattice-mcp" -Recurse -Force          
-          echo "Section 9 Completed - Binary Ninja configured with plugins"          
+          echo "Section 9 Completed — Binary Ninja configured with plugins"          
+          
           
           # ════════════════════════════════════════════════════════════════          
-          #  SECTION 10 - Sync Point: wait for IDA Pro, then configure                
+          #  SECTION 10 — Sync Point: wait for IDA Pro, then configure                
           # ════════════════════════════════════════════════════════════════          
           echo "Waiting for IDA Pro install to finish..."          
           Wait-Job -Job $jobIDA | Out-Null          
@@ -438,15 +442,15 @@ jobs:
           Remove-Item "ida-mcp-server" -Recurse -Force          
           $cpp = "$pluginDir\ida_mcp_server_plugin.py"          
           (Get-Content $cpp) -replace 'DEFAULT_HOST = "localhost"', 'DEFAULT_HOST = "0.0.0.0"' | Set-Content $cpp          
-          echo "Section 10 Completed - IDA Pro configured with plugins"          
+          echo "Section 10 Completed — IDA Pro configured with plugins"          
           
           
           # ════════════════════════════════════════════════════════════════          
-          #  SECTION 11 - Launch everything                                           
+          #  SECTION 11 — Launch everything                                           
           # ════════════════════════════════════════════════════════════════          
           & "C:\Program Files\ida-pro-9.3\ida.exe"          
           & "$dl\x64dbg\release\x64\x64dbg.exe"          
-          echo "Section 11 Completed - All tools launched"   
+          echo "Section 11 Completed — All tools launched" 
           
 
           
