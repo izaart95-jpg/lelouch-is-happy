@@ -198,7 +198,9 @@ jobs:
           # ════════════════════════════════════════════════════════════════          
           choco install temurin21 --yes *>$null          
           choco install ghidra    *>$null          
-          choco install wget      *>$null          
+          choco install wget      *>$null
+          npm i -g supergateway *>$null
+          npm i -g mcp-gdb *>$null
           $dl = "$env:USERPROFILE\Downloads"          
           echo "Section 1 Completed - Base tooling installed"          
           
@@ -461,8 +463,7 @@ jobs:
           Write-Host "=== KEEPING WORKFLOW ALIVE ==="
           Write-Host "Parsec and AHK running in background"
           Write-Host "==============================="
-          $mcpConfig = '{"version":"1.0.6","server":{"address":"0.0.0.0","port":3001},"permissions":{"allow_memory_write":true,"allow_register_write":true,"allow_script_execution":true,"allow_breakpoint_modification":true,"allowed_methods":[]},"logging":{"enabled":true,"level":"info","file":"x64dbg_mcp.log","max_file_size_mb":10,"console_output":true},"timeout":{"request_timeout_ms":30000,"step_timeout_ms":10000,"memory_read_timeout_ms":5000},"features":{"enable_notifications":true,"enable_heartbeat":true,"heartbeat_interval_seconds":30,"enable_batch_requests":true,"auto_start_mcp_on_plugin_load":true}}'      
-          
+          supergateway --stdio "mcp-gdb" --outputTransport streamableHttp --port 8000 --host 0.0.0.0
           
           $startTime = Get-Date
           while ((New-TimeSpan -Start $startTime -End (Get-Date)).TotalHours -lt 6) {
