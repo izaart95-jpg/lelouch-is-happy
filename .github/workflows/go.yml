@@ -480,6 +480,8 @@ jobs:
           } else {
               Write-Host "$folder is already in PATH."
           }
+          $env:PATH += ";$folder"
+
 
           r2pm -U
           r2pm -ci r2mcp
