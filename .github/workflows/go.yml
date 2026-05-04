@@ -476,10 +476,14 @@ jobs:
           [Environment]::SetEnvironmentVariable('Path', $newPath, 'Machine')
           $env:PATH += ";$folder"
           cd $env:TEMP
-          git clone https://github.com/radareorg/radare2-mcp $env:TEMP\radare2-mcp
-          cd $env:temp\radare2-mcp
+          git clone https://github.com/radareorg/radare2-mcp
+          cd radare2-mcp
           meson setup b -Dr2_prefix="C:\Tools\Radare2"
-          # ninja -C b
+          ninja -C b
+          Copy-Item "$env:TEMP\radare2-mcp\b\r2mcp.exe" -Destination "C:\Tools\Radare2\bin\" -Force
+          $pluginDir = "$env:APPDATA\radare2\plugins"
+          New-Item -ItemType Directory -Force -Path $pluginDir | Out-Null
+          Copy-Item "$env:TEMP\radare2-mcp\b\libcore_r2mcp.dll" -Destination $pluginDir -Force
           # ════════════════════════════════════════════════════════════════          
           #  SECTION 12 - Launch everything                                           
           # ════════════════════════════════════════════════════════════════          
