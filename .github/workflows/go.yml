@@ -481,17 +481,16 @@ jobs:
               Write-Host "$folder is already in PATH."
           }
           $env:PATH += ";$folder"
-          r2pm -U
           cd $temp
           git clone https://github.com/radareorg/radare2-mcp $temp\radare2-mcp
           cd $temp\radare2-mcp
           meson setup b -Dr2_prefix="C:\Tools\Radare2"
-          ninja -C b
+          # ninja -C b
           # ════════════════════════════════════════════════════════════════          
           #  SECTION 12 - Launch everything                                           
           # ════════════════════════════════════════════════════════════════          
-          & "C:\Program Files\ida-pro-9.3\ida.exe" | Out-Null       
-          & "$dl\x64dbg\release\x64\x64dbg.exe"          
+          # & "C:\Program Files\ida-pro-9.3\ida.exe" | Out-Null       
+          # & "$dl\x64dbg\release\x64\x64dbg.exe"          
           echo "Section 12 Completed - All tools launched"
           
 
