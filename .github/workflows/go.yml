@@ -206,7 +206,13 @@ jobs:
           npm i -g supergateway *>$null
           npm i -g mcp-gdb *>$null
           npm i -g binary-ninja-mcp *>$null
-          cd $TEMP
+          $temp = $env:TEMP
+          curl -L -o $temp/bridge_mcp_hydra.py https://raw.githubusercontent.com/starsong-consulting/GhydraMCP/refs/heads/main/bridge_mcp_hydra.py 
+          curl -L -o $temp/bridge_mcp_ghidra.py https://raw.githubusercontent.com/bethington/ghidra-mcp/refs/heads/main/bridge_mcp_ghidra.py
+          curl -L -o $temp/x64dbg.py https://raw.githubusercontent.com/Wasdubya/x64dbgMCP/refs/heads/main/src/x64dbg.py
+          git clone https://github.com/Invoke-RE/binja-lattice-mcp "$temp\binja-lattice-mcp"
+          cd $temp\binja-lattice-mcp
+          Get-ChildItem -Path . -Exclude "lib", "mcp_server.py", "lattice_client.py" | Remove-Item -Recurse -Force
           
           $dl = "$env:USERPROFILE\Downloads"          
           echo "Section 1 Completed - Base tooling installed"          
