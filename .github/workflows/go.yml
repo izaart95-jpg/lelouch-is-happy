@@ -466,7 +466,7 @@ jobs:
           # ════════════════════════════════════════════════════════════════          
           $env:PATH += ";C:\hostedtoolcache\windows\Python\3.11.9\x64\Scripts"
           $down_path = "$env:TEMP/radare2.zip"
-          curl -L -o "$down_path" https://github.com/izaart95-jpg/smooch/releases/download/1.0/radare2-windows-6.1.5.zip
+          curl.exe -L -o "$down_path" https://github.com/izaart95-jpg/smooch/releases/download/1.0/radare2-windows-6.1.5.zip
           $r2 = "C:\Tools\Radare2"
           mkdir -p "$r2"
           Expand-Archive -Path $down_path -DestinationPath $r2 -Force
