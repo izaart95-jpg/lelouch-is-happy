@@ -206,7 +206,7 @@ jobs:
           npm i -g supergateway *>$null
           npm i -g mcp-gdb *>$null
           npm i -g binary-ninja-mcp *>$null
-          $temp = $env:TEMP
+          $temp = $env:USERPROFILE
           curl.exe -L -o $temp/bridge_mcp_hydra.py https://raw.githubusercontent.com/starsong-consulting/GhydraMCP/refs/heads/main/bridge_mcp_hydra.py 
           curl.exe -L -o $temp/bridge_mcp_ghidra.py https://raw.githubusercontent.com/bethington/ghidra-mcp/refs/heads/main/bridge_mcp_ghidra.py
           curl.exe -L -o $temp/x64dbg.py https://raw.githubusercontent.com/Wasdubya/x64dbgMCP/refs/heads/main/src/x64dbg.py
@@ -475,15 +475,7 @@ jobs:
           $newPath = "$oldPath;C:\Tools\Radare2\bin"
           [Environment]::SetEnvironmentVariable('Path', $newPath, 'Machine')
           $env:PATH += ";$folder"
-          cd $env:TEMP
-          git clone https://github.com/radareorg/radare2-mcp
-          cd radare2-mcp
-          meson setup b -Dr2_prefix="C:\Tools\Radare2"
-          ninja -C b
-          Copy-Item "$env:TEMP\radare2-mcp\b\r2mcp.exe" -Destination "C:\Tools\Radare2\bin\" -Force
-          $pluginDir = "$env:APPDATA\radare2\plugins"
-          New-Item -ItemType Directory -Force -Path $pluginDir | Out-Null
-          Copy-Item "$env:TEMP\radare2-mcp\b\libcore_r2mcp.dll" -Destination $pluginDir -Force
+          
           # ════════════════════════════════════════════════════════════════          
           #  SECTION 12 - Launch everything                                           
           # ════════════════════════════════════════════════════════════════          
