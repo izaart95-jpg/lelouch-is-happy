@@ -471,19 +471,13 @@ jobs:
           mkdir -p "$r2" | Out-Null
           Expand-Archive -Path $down_path -DestinationPath $r2 -Force
           $folder = "$r2\bin"
-          $oldPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
-          if (-not $oldPath.Split(';') -contains $folder) {
-              # Append the folder
-              $newPath = $oldPath + ";" + $folder
-              [Environment]::SetEnvironmentVariable("Path", $newPath, "Machine")
-              Write-Host "Added $folder to system PATH. Restart your terminal to apply."
-          } else {
-              Write-Host "$folder is already in PATH."
-          }
+          $oldPath = [Environment]::GetEnvironmentVariable('Path', 'Machine')
+          $newPath = "$oldPath;C:\Tools\Radare2\bin"
+          [Environment]::SetEnvironmentVariable('Path', $newPath, 'Machine')
           $env:PATH += ";$folder"
-          cd $temp
-          git clone https://github.com/radareorg/radare2-mcp $temp\radare2-mcp
-          cd $temp\radare2-mcp
+          cd $env:TEMP
+          git clone https://github.com/radareorg/radare2-mcp $env:TEMP\radare2-mcp
+          cd $env:temp\radare2-mcp
           meson setup b -Dr2_prefix="C:\Tools\Radare2"
           # ninja -C b
           # ════════════════════════════════════════════════════════════════          
