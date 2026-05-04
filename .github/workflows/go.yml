@@ -199,6 +199,8 @@ jobs:
           choco install temurin21 --yes *>$null          
           choco install ghidra    *>$null          
           choco install wget      *>$null
+          winget install -e --id Microsoft.VisualStudioCode --accept-package-agreements --accept-source-agreements --silent
+          & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension  kilocode.kilo-code
           npm i -g supergateway *>$null
           npm i -g mcp-gdb *>$null
           $dl = "$env:USERPROFILE\Downloads"          
@@ -224,7 +226,6 @@ jobs:
           $mcpConfig = '{"features":{"auto_start_mcp_on_plugin_load":true,"enable_batch_requests":true,"enable_heartbeat":true,"enable_notifications":true,"heartbeat_interval_seconds":30},"logging":{"console_output":true,"enabled":true,"file":"plugin.log","level":"info","max_file_size_mb":10},"permissions":{"allow_breakpoint_modification":true,"allow_memory_write":true,"allow_register_write":true,"allow_script_execution":true,"allowed_methods":["assembler.*","bookmark.*","breakpoint.*","comment.*","context.*","debug.*","disasm.*","disassembly.*","dump.*","eval.*","function.*","memory.*","module.*","patch.*","register.*","script.*","stack.*","symbol.*","thread.*","xref.*"]},"server":{"address":"0.0.0.0","port":3001},"timeout":{"memory_read_timeout_ms":5000,"request_timeout_ms":30000,"step_timeout_ms":10000},"version":"1.0.6"}'          
           # Write without BOM using .NET directly (works on PS 5.x)
           [System.IO.File]::WriteAllText("$plugins_x64\x64dbg-mcp\config.json", ($mcpConfig | jq '.'), [System.Text.UTF8Encoding]::new($false))
-          Get-Content "$plugins_x64\x64dbg-mcp\config.json"
           [System.IO.File]::WriteAllText("$plugins_x32\x64dbg-mcp\config.json", ($mcpConfig | jq '.'), [System.Text.UTF8Encoding]::new($false))
           $iniBlock = "[XAutomate]`r`nBindAddress=0.0.0.0`r`nMode=remote`r`nPubSubPort=69BA`r`nReqRepPort=69BB`r`n"          
           $iniBlock | Out-File -FilePath "$dl\x64dbg\release\x64\x64dbg.ini" -Append -Encoding UTF8          
