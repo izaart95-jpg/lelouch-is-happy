@@ -466,9 +466,9 @@ jobs:
           # ════════════════════════════════════════════════════════════════          
           $env:PATH += ";C:\hostedtoolcache\windows\Python\3.11.9\x64\Scripts"
           $down_path = "$env:TEMP/radare2.zip"
-          curl.exe -L -o "$down_path" https://github.com/izaart95-jpg/smooch/releases/download/1.0/radare2-windows-6.1.5.zip
+          curl.exe -L -o "$down_path" https://github.com/izaart95-jpg/smooch/releases/download/1.0/radare2-windows-6.1.5.zip | Out-Null
           $r2 = "C:\Tools\Radare2"
-          mkdir -p "$r2"
+          mkdir -p "$r2" | Out-Null
           Expand-Archive -Path $down_path -DestinationPath $r2 -Force
           $folder = "$r2\bin"
           $oldPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
@@ -481,16 +481,18 @@ jobs:
               Write-Host "$folder is already in PATH."
           }
           $env:PATH += ";$folder"
-
-
           r2pm -U
-          r2pm -ci r2mcp
+          cd $temp
+          git clone https://github.com/radareorg/radare2-mcp $temp\radare2-mcp
+          cd $temp\radare2-mcp
+          meson b
+          ninja -C b
           # ════════════════════════════════════════════════════════════════          
           #  SECTION 12 - Launch everything                                           
           # ════════════════════════════════════════════════════════════════          
-          & "C:\Program Files\ida-pro-9.3\ida.exe"          
+          & "C:\Program Files\ida-pro-9.3\ida.exe" | Out-Null       
           & "$dl\x64dbg\release\x64\x64dbg.exe"          
-          echo "Section 11 Completed - All tools launched"
+          echo "Section 12 Completed - All tools launched"
           
 
           
