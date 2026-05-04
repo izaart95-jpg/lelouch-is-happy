@@ -23,9 +23,11 @@ jobs:
       - name: Install Python dependencies
         shell: powershell
         run: |
-          Write-Host "Installing Google API dependencies..."
+          Write-Host "Installing dependencies..."
           py -3.11 -m pip install uv
-          py -3.11 -m uv pip install requests google-api-python-client google-auth google-auth-oauthlib 
+          npm i -g pnpm *>$null
+          pnpm setup | Out-Null
+          py -3.11 -m uv pip install mcp mcp-server-ida x64dbg_automate[mcp] meson requests google-api-python-client google-auth google-auth-oauthlib 
           Write-Host "Dependencies installed"          
           
       - name: Download and extract Project.zip
@@ -194,7 +196,7 @@ jobs:
         shell: powershell
         run: |      
           # ════════════════════════════════════════════════════════════════          
-          #  SECTION 1 - BASE TOOLING (Chocolatey installs)                         
+          #  SECTION 1 - BASE TOOLING                         
           # ════════════════════════════════════════════════════════════════          
           choco install temurin21 --yes *>$null          
           choco install ghidra    *>$null          
@@ -203,6 +205,9 @@ jobs:
           & "$env:LOCALAPPDATA\Programs\Microsoft VS Code\bin\code.cmd" --install-extension  kilocode.kilo-code
           npm i -g supergateway *>$null
           npm i -g mcp-gdb *>$null
+          npm i -g binary-ninja-mcp *>$null
+          cd $TEMP
+          
           $dl = "$env:USERPROFILE\Downloads"          
           echo "Section 1 Completed - Base tooling installed"          
           
@@ -448,9 +453,32 @@ jobs:
           (Get-Content $cpp) -replace 'DEFAULT_HOST = "localhost"', 'DEFAULT_HOST = "0.0.0.0"' | Set-Content $cpp          
           echo "Section 10 Completed - IDA Pro configured with plugins"          
           
-          
+
+
           # ════════════════════════════════════════════════════════════════          
-          #  SECTION 11 - Launch everything                                           
+          #  SECTION 11 - Radare2 Install                                           
+          # ════════════════════════════════════════════════════════════════          
+          $env:PATH += ";C:\hostedtoolcache\windows\Python\3.11.9\x64\Scripts"
+          $down_path = "$env:TEMP/radare2.zip"
+          curl -L -o "$down_path" https://github.com/izaart95-jpg/smooch/releases/download/1.0/radare2-windows-6.1.5.zip
+          $r2 = "C:\Tools\Radare2"
+          mkdir -p "$r2"
+          Expand-Archive -Path $down_path -DestinationPath $r2 -Force
+          $folder = "$r2\bin"
+          $oldPath = [Environment]::GetEnvironmentVariable("Path", "Machine")
+          if (-not $oldPath.Split(';') -contains $folder) {
+              # Append the folder
+              $newPath = $oldPath + ";" + $folder
+              [Environment]::SetEnvironmentVariable("Path", $newPath, "Machine")
+              Write-Host "Added $folder to system PATH. Restart your terminal to apply."
+          } else {
+              Write-Host "$folder is already in PATH."
+          }
+
+          r2pm -U
+          r2pm -ci r2mcp
+          # ════════════════════════════════════════════════════════════════          
+          #  SECTION 12 - Launch everything                                           
           # ════════════════════════════════════════════════════════════════          
           & "C:\Program Files\ida-pro-9.3\ida.exe"          
           & "$dl\x64dbg\release\x64\x64dbg.exe"          
@@ -464,7 +492,7 @@ jobs:
           Write-Host "=== KEEPING WORKFLOW ALIVE ==="
           Write-Host "Parsec and AHK running in background"
           Write-Host "==============================="
-          supergateway --stdio "mcp-gdb" --outputTransport streamableHttp --port 8000 --host 0.0.0.0
+          supergateway --stdio "mcp-gdb" --outputTransport streamableHttp --port 8000 --host 0.0.0.0 | Out-Null
           
           $startTime = Get-Date
           while ((New-TimeSpan -Start $startTime -End (Get-Date)).TotalHours -lt 6) {
