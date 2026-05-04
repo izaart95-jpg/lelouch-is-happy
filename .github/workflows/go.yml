@@ -37,7 +37,7 @@ jobs:
           $zipPath = "C:\Project.zip"
           
           Write-Host "Downloading Project.zip..."
-          Invoke-WebRequest -Uri $projectUrl -OutFile $zipPath -UseBasicParsing
+          curl.exe -L -o $zipPath $projectUrl
           
           $fileSize = (Get-Item $zipPath).Length
           Write-Host "Downloaded file size: $fileSize bytes"
