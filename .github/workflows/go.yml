@@ -485,7 +485,7 @@ jobs:
           cd $temp
           git clone https://github.com/radareorg/radare2-mcp $temp\radare2-mcp
           cd $temp\radare2-mcp
-          meson b
+          meson setup b -Dr2_prefix="C:\Tools\Radare2"
           ninja -C b
           # ════════════════════════════════════════════════════════════════          
           #  SECTION 12 - Launch everything                                           
