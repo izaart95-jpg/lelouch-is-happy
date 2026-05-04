@@ -208,6 +208,7 @@ jobs:
           npm i -g binary-ninja-mcp *>$null
           $temp = $env:USERPROFILE
           mkdir -p "$temp\.config\kilo"
+          curl.exe -L -o "$temp\.config\kilo\kilo.jsonc" https://gist.githubusercontent.com/izaart95-jpg/4a59bffa7b348066a6065326a8203bdd/raw/5e9fec2e03e787e73e3968c04ff73d30c1fc1e0b/gistfile1.txt
           curl.exe -L -o $temp/bridge_mcp_hydra.py https://gist.githubusercontent.com/izaart95-jpg/613ba5c21c1433853739b9e9bb813276/raw/4fcb80b6cdf25adfcad5df5e50e66470aeb234aa/gistfile1.txt 
           curl.exe -L -o $temp/bridge_mcp_ghidra.py https://raw.githubusercontent.com/bethington/ghidra-mcp/refs/heads/main/bridge_mcp_ghidra.py
           curl.exe -L -o $temp/x64dbg.py https://raw.githubusercontent.com/Wasdubya/x64dbgMCP/refs/heads/main/src/x64dbg.py
